@@ -315,7 +315,7 @@ jobs:
             XSg0ovG0EAAAeT0AAAoAGAAAAAAAAQAAAKSB+koAAHNyYy9hcHAuanNVVAUAA3Exo2p1eAsAAQT1AQAABBQAAABQSwUGAAAAABYAFgAZBwAA8lsAAAAA
         run: |
           find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf -- {} +
-          printf '%s' "$PROJECT_ZIP_B64" | base64 --decode > /tmp/anime-finder.zip
+          printf '%s' "$PROJECT_ZIP_B64" | base64 --decode --ignore-garbage > /tmp/anime-finder.zip
           unzip -q /tmp/anime-finder.zip -d .
           npm run verify
           git config user.name "github-actions[bot]"
