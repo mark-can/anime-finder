@@ -1,0 +1,667 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Что выходило — поиск аниме по году и жанру</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Antonio:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap" rel="stylesheet">
+
+<style>
+:root{
+  --paper:#E3E6E1;
+  --panel:#F1F3EF;
+  --row:#FAFBF9;
+  --ink:#15181B;
+  --ink-soft:#5C6369;
+  --ink-faint:#8B9299;
+  --indigo:#26364F;
+  --indigo-soft:#4C6285;
+  --wine:#8A2B3F;
+  --line:#C9CEC7;
+  --line-soft:#DFE3DC;
+  --radius:3px;
+}
+
+*{box-sizing:border-box}
+
+html{-webkit-text-size-adjust:100%}
+
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:"Zen Kaku Gothic New",system-ui,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+}
+
+.wrap{max-width:1000px;margin:0 auto;padding:28px 20px 80px}
+
+/* ---------- header ---------- */
+
+.masthead{
+  display:flex;
+  align-items:baseline;
+  gap:14px;
+  flex-wrap:wrap;
+  padding-bottom:14px;
+  border-bottom:2px solid var(--indigo);
+}
+.masthead h1{
+  font-size:22px;
+  font-weight:700;
+  letter-spacing:-.01em;
+  margin:0;
+}
+.masthead p{
+  margin:0;
+  font-size:13px;
+  color:var(--ink-soft);
+  max-width:46ch;
+}
+
+/* ---------- controls ---------- */
+
+.controls{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-top:none;
+  padding:18px;
+  display:grid;
+  gap:16px;
+  grid-template-columns:repeat(4,1fr);
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:12px;font-weight:500;color:var(--ink-soft)}
+
+select{
+  font:inherit;
+  font-size:14px;
+  color:var(--ink);
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:7px 9px;
+  width:100%;
+}
+select:focus-visible,
+button:focus-visible,
+input:focus-visible{outline:2px solid var(--indigo-soft);outline-offset:2px}
+
+.formats{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.formats > span{font-size:12px;font-weight:500;color:var(--ink-soft);margin-right:4px}
+.chip{
+  position:relative;
+  display:inline-flex;
+}
+.chip input{
+  position:absolute;
+  opacity:0;
+  width:100%;height:100%;
+  margin:0;cursor:pointer;
+}
+.chip span{
+  padding:4px 11px;
+  font-size:13px;
+  border:1px solid var(--line);
+  border-radius:999px;
+  background:#fff;
+  color:var(--ink-soft);
+  user-select:none;
+}
+.chip input:checked + span{
+  background:var(--indigo);
+  border-color:var(--indigo);
+  color:#fff;
+}
+.chip input:focus-visible + span{outline:2px solid var(--indigo-soft);outline-offset:2px}
+
+.actions{grid-column:1/-1;display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+
+button.go{
+  font:inherit;
+  font-weight:700;
+  font-size:15px;
+  color:#fff;
+  background:var(--indigo);
+  border:none;
+  border-radius:var(--radius);
+  padding:10px 26px;
+  cursor:pointer;
+}
+button.go:hover{background:#1B2839}
+button.go:disabled{background:var(--ink-faint);cursor:default}
+
+.hint{font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- status ---------- */
+
+.status{
+  margin-top:22px;
+  padding:20px;
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  font-size:14px;
+  color:var(--ink-soft);
+}
+.status.error{
+  background:#F7ECEE;
+  border-color:#D9B2BA;
+  color:#6E2331;
+}
+.status strong{color:var(--ink);font-weight:700}
+
+/* ---------- results meta ---------- */
+
+.resmeta{
+  display:flex;
+  justify-content:space-between;
+  align-items:baseline;
+  gap:12px;
+  flex-wrap:wrap;
+  margin:26px 0 8px;
+}
+.resmeta h2{font-size:16px;font-weight:700;margin:0}
+.resmeta .count{font-size:12.5px;color:var(--ink-faint)}
+
+/* ---------- rows ---------- */
+
+ol.results{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+
+li.item{
+  display:grid;
+  grid-template-columns:34px 46px 1fr 120px 66px;
+  gap:14px;
+  align-items:center;
+  padding:11px 8px;
+  background:var(--row);
+  border-bottom:1px solid var(--line-soft);
+}
+li.item:nth-child(even){background:transparent}
+
+.rank{
+  font-family:Antonio,sans-serif;
+  font-size:22px;
+  font-weight:400;
+  color:var(--ink-faint);
+  text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+li.item:nth-child(-n+3) .rank{color:var(--wine);font-weight:600}
+
+.cover{
+  width:46px;height:64px;
+  object-fit:cover;
+  border-radius:2px;
+  background:var(--line-soft);
+  display:block;
+}
+
+.meta{min-width:0}
+.meta a.title{
+  color:var(--ink);
+  font-weight:700;
+  font-size:14.5px;
+  line-height:1.3;
+  text-decoration:none;
+  display:block;
+}
+.meta a.title:hover{color:var(--wine);text-decoration:underline}
+.sub{font-size:12px;color:var(--ink-faint);margin-top:2px}
+.tags{font-size:12px;color:var(--ink-soft);margin-top:3px}
+
+.carry{
+  display:inline-block;
+  font-size:11px;
+  font-weight:500;
+  color:var(--wine);
+  border:1px solid #D6B4BC;
+  background:#F8EEF0;
+  border-radius:2px;
+  padding:0 5px;
+  margin-left:6px;
+  vertical-align:1px;
+}
+
+/* airing span bar */
+.span{position:relative;height:26px}
+.span-label{font-size:11px;color:var(--ink-faint);margin-bottom:3px;white-space:nowrap}
+.span-track{
+  position:relative;
+  height:7px;
+  background:var(--line-soft);
+  border-left:1px solid var(--line);
+  border-right:1px solid var(--line);
+}
+.span-fill{
+  position:absolute;top:0;height:7px;
+  background:var(--indigo-soft);
+}
+.span-fill.live{background:var(--wine)}
+.spill{
+  position:absolute;top:0;
+  width:0;height:0;
+  border-top:3.5px solid transparent;
+  border-bottom:3.5px solid transparent;
+}
+.spill.l{left:-6px;border-right:6px solid var(--indigo-soft)}
+.spill.r{right:-6px;border-left:6px solid var(--indigo-soft)}
+
+.score{text-align:right}
+.score b{
+  font-family:Antonio,sans-serif;
+  font-size:26px;
+  font-weight:600;
+  color:var(--indigo);
+  display:block;
+  line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.score span{font-size:11.5px;color:var(--ink-faint);white-space:nowrap}
+.score.thin b{color:var(--ink-faint)}
+
+footer{
+  margin-top:32px;
+  padding-top:14px;
+  border-top:1px solid var(--line);
+  font-size:12px;
+  color:var(--ink-faint);
+}
+footer a{color:var(--indigo-soft)}
+
+@media (max-width:860px){
+  .controls{grid-template-columns:repeat(2,1fr)}
+  li.item{
+    grid-template-columns:28px 42px 1fr auto;
+    grid-template-areas:"rank cover meta score" ". . span span";
+    row-gap:6px;
+  }
+  .rank{grid-area:rank}
+  .cover{grid-area:cover}
+  .meta{grid-area:meta}
+  .score{grid-area:score}
+  .span{grid-area:span}
+}
+@media (max-width:520px){
+  .controls{grid-template-columns:1fr}
+  .wrap{padding:20px 14px 60px}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<div class="masthead">
+  <h1>Что выходило</h1>
+  <p>Лучшее аниме года по жанру — включая сериалы, которые начались раньше, но продолжали выходить.</p>
+</div>
+
+<div class="controls">
+  <div class="field">
+    <label for="year">Год</label>
+    <select id="year"></select>
+  </div>
+  <div class="field">
+    <label for="genre">Жанр</label>
+    <select id="genre"></select>
+  </div>
+  <div class="field">
+    <label for="minvotes">Минимум оценок</label>
+    <select id="minvotes">
+      <option value="0">без ограничения</option>
+      <option value="100">100</option>
+      <option value="1000" selected>1 000</option>
+      <option value="5000">5 000</option>
+      <option value="10000">10 000</option>
+      <option value="50000">50 000</option>
+    </select>
+  </div>
+  <div class="field">
+    <label for="sort">Сортировка</label>
+    <select id="sort">
+      <option value="score" selected>По оценке</option>
+      <option value="bayes">С поправкой на число оценок</option>
+      <option value="votes">По числу оценок</option>
+    </select>
+  </div>
+
+  <div class="formats" id="formats">
+    <span>Форматы</span>
+  </div>
+
+  <div class="actions">
+    <button class="go" id="go">Показать</button>
+    <span class="hint" id="hint">Топ-50 по оценкам AniList</span>
+  </div>
+</div>
+
+<div id="status" class="status">Выбери год и жанр, потом нажми «Показать».</div>
+
+<div id="out"></div>
+
+<footer>
+  Данные — <a href="https://anilist.co" target="_blank" rel="noopener">AniList</a>.
+  Оценка приведена к десятибалльной шкале. «Оценок» — сумма по распределению оценок, то есть сколько человек реально поставили балл, а не сколько добавили в список.
+</footer>
+
+</div>
+
+<script>
+const API = "https://graphql.anilist.co";
+
+const GENRES = ["Action","Adventure","Comedy","Drama","Ecchi","Fantasy","Horror",
+  "Mahou Shoujo","Mecha","Music","Mystery","Psychological","Romance","Sci-Fi",
+  "Slice of Life","Sports","Supernatural","Thriller"];
+
+const GENRE_RU = {
+  "Action":"Экшен","Adventure":"Приключения","Comedy":"Комедия","Drama":"Драма",
+  "Ecchi":"Этти","Fantasy":"Фэнтези","Horror":"Хоррор","Mahou Shoujo":"Махо-сёдзё",
+  "Mecha":"Меха","Music":"Музыка","Mystery":"Детектив","Psychological":"Психологическое",
+  "Romance":"Романтика","Sci-Fi":"Фантастика","Slice of Life":"Повседневность",
+  "Sports":"Спорт","Supernatural":"Мистика","Thriller":"Триллер"
+};
+
+const FORMATS = [
+  {v:"TV",     label:"ТВ",       on:true},
+  {v:"TV_SHORT",label:"Короткие",on:false},
+  {v:"MOVIE",  label:"Фильмы",   on:true},
+  {v:"ONA",    label:"ONA",      on:true},
+  {v:"OVA",    label:"OVA",      on:false},
+  {v:"SPECIAL",label:"Спецвыпуски",on:false}
+];
+
+const MONTHS = ["янв","фев","мар","апр","май","июн","июл","авг","сен","окт","ноя","дек"];
+
+const FIELDS = `
+      id idMal siteUrl format episodes status averageScore popularity
+      title{ romaji english }
+      startDate{ year month day }
+      endDate{ year month day }
+      genres
+      coverImage{ medium }
+      stats{ scoreDistribution{ amount } }`;
+
+// Only declare the filters we actually use. An explicitly-passed null is
+// ambiguous — AniList may or may not treat it as "no filter" — so omit instead.
+function buildQuery(f) {
+  const decl = ["$page:Int"], args = ["type:ANIME", "isAdult:false", "sort:SCORE_DESC"];
+  if (f.genre)    { decl.push("$genre:String");            args.push("genre:$genre"); }
+  if (f.startLt)  { decl.push("$startLt:FuzzyDateInt");    args.push("startDate_lesser:$startLt"); }
+  if (f.endGt)    { decl.push("$endGt:FuzzyDateInt");      args.push("endDate_greater:$endGt"); }
+  if (f.statusIn) { decl.push("$statusIn:[MediaStatus]");  args.push("status_in:$statusIn"); }
+  return `query (${decl.join(",")}){
+  Page(page:$page, perPage:50){
+    pageInfo{ hasNextPage }
+    media(${args.join(", ")}){${FIELDS}
+    }
+  }
+}`;
+}
+
+const cache = new Map();
+let lastCall = 0;
+
+/* ---------- setup ---------- */
+
+const $ = id => document.getElementById(id);
+const nowYear = new Date().getFullYear();
+
+const ySel = $("year");
+for (let y = nowYear; y >= 1990; y--) {
+  ySel.insertAdjacentHTML("beforeend", `<option value="${y}">${y}</option>`);
+}
+
+const gSel = $("genre");
+gSel.insertAdjacentHTML("beforeend", `<option value="">Все жанры</option>`);
+GENRES.forEach(g => {
+  const sel = g === "Action" ? " selected" : "";
+  gSel.insertAdjacentHTML("beforeend",
+    `<option value="${g}"${sel}>${GENRE_RU[g]}</option>`);
+});
+
+FORMATS.forEach(f => {
+  $("formats").insertAdjacentHTML("beforeend",
+    `<label class="chip"><input type="checkbox" value="${f.v}"${f.on?" checked":""}><span>${f.label}</span></label>`);
+});
+
+/* ---------- helpers ---------- */
+
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c =>
+  ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const nfmt = n => n.toLocaleString("ru-RU").replace(/,/g, " ");
+
+// fuzzy date -> {y,m,d} normalised; missing parts default sensibly
+function fd(o, endOfPeriod) {
+  if (!o || !o.year) return null;
+  return {
+    y: o.year,
+    m: o.month || (endOfPeriod ? 12 : 1),
+    d: o.day   || (endOfPeriod ? 31 : 1)
+  };
+}
+const toNum = d => d ? d.y * 10000 + d.m * 100 + d.d : null;
+
+function dateLabel(s, e, status) {
+  const a = s ? `${MONTHS[s.m-1]} ${s.y}` : "?";
+  if (status === "RELEASING") return `${a} — идёт`;
+  if (!e) return a;
+  const b = `${MONTHS[e.m-1]} ${e.y}`;
+  return a === b ? a : `${a} — ${b}`;
+}
+
+function votesOf(m) {
+  const d = m.stats && m.stats.scoreDistribution;
+  if (!d || !d.length) return 0;
+  return d.reduce((s, x) => s + (x.amount || 0), 0);
+}
+
+async function gql(vars) {
+  // drop empty filters so they never reach the query at all
+  const clean = {};
+  for (const k in vars) if (vars[k] != null) clean[k] = vars[k];
+
+  const key = JSON.stringify(clean);
+  if (cache.has(key)) return cache.get(key);
+
+  const gap = 450 - (Date.now() - lastCall);
+  if (gap > 0) await new Promise(r => setTimeout(r, gap));
+  lastCall = Date.now();
+
+  const res = await fetch(API, {
+    method: "POST",
+    headers: {"Content-Type": "application/json", "Accept": "application/json"},
+    body: JSON.stringify({query: buildQuery(clean), variables: clean})
+  });
+
+  if (res.status === 429) {
+    const wait = parseInt(res.headers.get("Retry-After") || "20", 10);
+    throw new Error(`Лимит запросов AniList исчерпан. Подожди ${wait} с и повтори.`);
+  }
+  if (!res.ok) throw new Error(`AniList ответил ошибкой ${res.status}.`);
+
+  const json = await res.json();
+  if (json.errors) throw new Error(json.errors[0].message);
+
+  cache.set(key, json.data.Page);
+  return json.data.Page;
+}
+
+/* ---------- fetching ---------- */
+
+// Two passes, because endDate_greater silently drops anime with no end date.
+// Pass 1 catches everything with a known end date that overlaps the year.
+// Pass 2 catches everything still on air that had started by the end of the year.
+async function collect(year, genre, onProgress) {
+  const startLt = year * 10000 + 1231;
+  const endGt   = year * 10000 + 101;
+  const found = new Map();
+
+  const passes = [
+    {startLt, endGt, statusIn: null},
+    {startLt, endGt: null, statusIn: ["RELEASING", "HIATUS"]}
+  ];
+
+  for (const p of passes) {
+    for (let page = 1; page <= 4; page++) {
+      onProgress(found.size);
+      const data = await gql({
+        page,
+        genre: genre || null,
+        startLt: p.startLt,
+        endGt: p.endGt,
+        statusIn: p.statusIn
+      });
+      data.media.forEach(m => { if (!found.has(m.id)) found.set(m.id, m); });
+      if (!data.pageInfo.hasNextPage) break;
+    }
+  }
+  return [...found.values()];
+}
+
+/* ---------- rendering ---------- */
+
+function spanBar(s, e, year, live) {
+  const y0 = year * 10000 + 101, y1 = year * 10000 + 1231;
+  const sn = toNum(s), en = live ? y1 + 1 : (toNum(e) ?? y1);
+
+  const dayOf = n => {
+    if (n == null) return 0;
+    const yy = Math.floor(n / 10000), mm = Math.floor(n / 100) % 100, dd = n % 100;
+    return (yy - year) * 365 + (mm - 1) * 30.4 + dd;
+  };
+  const total = 365;
+  let L = Math.max(0, Math.min(100, dayOf(sn) / total * 100));
+  let R = Math.max(0, Math.min(100, dayOf(en) / total * 100));
+  if (R - L < 3) R = Math.min(100, L + 3);
+
+  const spillL = sn != null && sn < y0;
+  const spillR = live || (toNum(e) != null && toNum(e) > y1);
+
+  return `<div class="span">
+    <div class="span-label">${esc(dateLabel(s, e, live ? "RELEASING" : ""))}</div>
+    <div class="span-track">
+      <div class="span-fill${live ? " live" : ""}" style="left:${L}%;width:${R - L}%"></div>
+      ${spillL ? '<i class="spill l"></i>' : ""}
+      ${spillR ? '<i class="spill r"></i>' : ""}
+    </div>
+  </div>`;
+}
+
+function render(list, year, genre, minVotes) {
+  const gname = genre ? GENRE_RU[genre] : "все жанры";
+  let html = `<div class="resmeta">
+      <h2>${esc(gname)}, ${year}</h2>
+      <span class="count">${list.length} тайтлов${minVotes ? `, от ${nfmt(minVotes)} оценок` : ""}</span>
+    </div><ol class="results">`;
+
+  list.forEach((m, i) => {
+    const title = m.title.english || m.title.romaji;
+    const live = m.status === "RELEASING" || m.status === "HIATUS";
+    const carry = m._start && m._start.y < year;
+    const eps = m.episodes ? `${m.episodes} эп.` : "";
+    const fmt = m.format ? m.format.replace("TV_SHORT", "TV short") : "";
+    const thin = m._votes < 1000;
+
+    html += `<li class="item">
+      <div class="rank">${i + 1}</div>
+      <img class="cover" loading="lazy" alt="" src="${esc(m.coverImage?.medium || "")}">
+      <div class="meta">
+        <a class="title" href="${esc(m.siteUrl)}" target="_blank" rel="noopener">${esc(title)}</a>${
+          carry ? `<span class="carry">с ${m._start.y}</span>` : ""}
+        <div class="sub">${[fmt, eps].filter(Boolean).join(" · ")}${
+          m.idMal ? ` · <a href="https://myanimelist.net/anime/${m.idMal}" target="_blank" rel="noopener" style="color:var(--ink-faint)">MAL</a>` : ""}</div>
+        <div class="tags">${esc(m.genres.slice(0, 4).map(g => GENRE_RU[g] || g).join(", "))}</div>
+      </div>
+      ${spanBar(m._start, m._end, year, live)}
+      <div class="score${thin ? " thin" : ""}">
+        <b>${m._score ? m._score.toFixed(1) : "—"}</b>
+        <span>${m._votes ? nfmt(m._votes) : "нет"} оценок</span>
+      </div>
+    </li>`;
+  });
+
+  return html + "</ol>";
+}
+
+/* ---------- main ---------- */
+
+async function run() {
+  const year = +ySel.value;
+  const genre = gSel.value;
+  const minVotes = +$("minvotes").value;
+  const sortMode = $("sort").value;
+  const formats = [...document.querySelectorAll("#formats input:checked")].map(c => c.value);
+
+  const status = $("status"), out = $("out"), btn = $("go");
+
+  if (!formats.length) {
+    status.className = "status error";
+    status.textContent = "Выбери хотя бы один формат.";
+    out.innerHTML = "";
+    return;
+  }
+
+  btn.disabled = true;
+  out.innerHTML = "";
+  status.className = "status";
+  status.textContent = "Запрашиваю AniList…";
+
+  try {
+    let raw = await collect(year, genre, n => {
+      status.textContent = `Запрашиваю AniList… найдено ${n}`;
+    });
+
+    // enrich + client-side filtering
+    raw.forEach(m => {
+      m._start = fd(m.startDate, false);
+      m._end   = fd(m.endDate, true);
+      m._votes = votesOf(m);
+      m._score = m.averageScore ? m.averageScore / 10 : 0;
+    });
+
+    let list = raw.filter(m =>
+      formats.includes(m.format) &&
+      m._votes >= minVotes &&
+      m._score > 0
+    );
+
+    // Bayesian pull toward the mean of this result set
+    if (sortMode === "bayes") {
+      const C = list.reduce((s, m) => s + m._score, 0) / (list.length || 1);
+      const mPrior = Math.max(minVotes, 2000);
+      list.forEach(m => {
+        m._w = (m._votes / (m._votes + mPrior)) * m._score
+             + (mPrior / (m._votes + mPrior)) * C;
+      });
+      list.sort((a, b) => b._w - a._w);
+    } else if (sortMode === "votes") {
+      list.sort((a, b) => b._votes - a._votes);
+    } else {
+      list.sort((a, b) => b._score - a._score);
+    }
+
+    list = list.slice(0, 50);
+
+    if (!list.length) {
+      status.className = "status";
+      status.innerHTML = `Ничего не нашлось. <strong>Понизь порог оценок</strong> или добавь форматы — для старых лет и редких жанров 1 000 оценок часто слишком много.`;
+      return;
+    }
+
+    status.className = "status";
+    status.style.display = "none";
+    out.innerHTML = render(list, year, genre, minVotes);
+
+  } catch (err) {
+    status.style.display = "";
+    status.className = "status error";
+    status.textContent = err.message || "Не удалось получить данные. Проверь соединение и повтори.";
+  } finally {
+    btn.disabled = false;
+  }
+}
+
+$("go").addEventListener("click", () => { $("status").style.display = ""; run(); });
+document.addEventListener("keydown", e => { if (e.key === "Enter") $("go").click(); });
+</script>
