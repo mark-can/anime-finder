@@ -2,6 +2,7 @@ import {
   DEFAULT_FILTERS,
   FORMATS,
   GENRES,
+  LIMIT_OPTIONS,
   MAX_YEAR,
   MIN_RATING_OPTIONS,
   MIN_YEAR,
@@ -34,9 +35,12 @@ export function parseUrlState(search = window.location.search) {
       minRatings: allowedNumber(params.get("min"), MIN_RATING_OPTIONS, DEFAULT_FILTERS.minRatings),
       status: allowedString(params.get("status"), STATUSES, DEFAULT_FILTERS.status),
       sort: allowedString(params.get("sort"), SORTS, DEFAULT_FILTERS.sort),
+      limit: allowedNumber(params.get("limit"), LIMIT_OPTIONS, DEFAULT_FILTERS.limit),
       formats: params.has("formats") ? formats : [...DEFAULT_FILTERS.formats],
     },
-    shouldAutoSearch: ["year", "genre", "min", "status", "sort", "formats"].some((key) => params.has(key)),
+    shouldAutoSearch: ["year", "genre", "min", "status", "sort", "limit", "formats"].some((key) =>
+      params.has(key),
+    ),
   };
 }
 
@@ -49,6 +53,7 @@ export function buildShareUrl(filters, language, location = window.location) {
   url.searchParams.set("min", String(filters.minRatings));
   url.searchParams.set("status", filters.status);
   url.searchParams.set("sort", filters.sort);
+  url.searchParams.set("limit", String(filters.limit));
   url.searchParams.set("formats", filters.formats.join(","));
   return url;
 }
@@ -60,6 +65,7 @@ export function sameFilters(left, right) {
     left.minRatings === right.minRatings &&
     left.status === right.status &&
     left.sort === right.sort &&
+    left.limit === right.limit &&
     left.formats.join(",") === right.formats.join(",")
   );
 }
