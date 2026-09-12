@@ -11,6 +11,12 @@
   --line-soft: #e1e0d7;
   --accent: #2e4260;
   --accent-hover: #21324d;
+  --score-s: #0f6b4f;
+  --score-a: #3d7a2e;
+  --score-b: #63701d;
+  --score-c: #8a6414;
+  --score-d: #9a541b;
+  --score-e: #993322;
   --warm: #8a3a22;
   --warm-bg: #f8efea;
   --success: #255c46;
@@ -20,6 +26,33 @@
   --shadow: 0 16px 50px rgb(46 66 96 / 8%);
   font-family: "IBM Plex Sans", "Avenir Next", Avenir, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   font-synthesis: none;
+}
+
+/* Accent themes. Each one only moves the highlight colour: the paper, ink and
+   score palettes stay put so contrast stays predictable. */
+:root[data-theme="teal"] {
+  --accent: #0f5f6b;
+  --accent-hover: #0a4a54;
+}
+
+:root[data-theme="forest"] {
+  --accent: #24603f;
+  --accent-hover: #1a4b31;
+}
+
+:root[data-theme="plum"] {
+  --accent: #5c3566;
+  --accent-hover: #48284f;
+}
+
+:root[data-theme="rust"] {
+  --accent: #8f3f1f;
+  --accent-hover: #743217;
+}
+
+:root[data-theme="graphite"] {
+  --accent: #3b4147;
+  --accent-hover: #2b3035;
 }
 
 * {
@@ -137,6 +170,69 @@ h1 {
   color: var(--ink-soft);
   font-size: 14px;
   line-height: 1.5;
+}
+
+.header-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.theme-switch {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.theme-swatch {
+  position: relative;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: 1px solid rgb(0 0 0 / 18%);
+  border-radius: 50%;
+  background: var(--swatch, var(--accent));
+  cursor: pointer;
+}
+
+/* Keeps the visible dot small while the tap target stays finger-sized. */
+.theme-swatch::after {
+  position: absolute;
+  inset: -8px;
+  content: "";
+}
+
+.theme-swatch:hover {
+  transform: scale(1.08);
+}
+
+.theme-swatch[aria-pressed="true"] {
+  box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--ink);
+}
+
+.theme-swatch[data-theme-name="ink"] {
+  --swatch: #2e4260;
+}
+
+.theme-swatch[data-theme-name="teal"] {
+  --swatch: #0f5f6b;
+}
+
+.theme-swatch[data-theme-name="forest"] {
+  --swatch: #24603f;
+}
+
+.theme-swatch[data-theme-name="plum"] {
+  --swatch: #5c3566;
+}
+
+.theme-swatch[data-theme-name="rust"] {
+  --swatch: #8f3f1f;
+}
+
+.theme-swatch[data-theme-name="graphite"] {
+  --swatch: #3b4147;
 }
 
 .language-switch {
@@ -329,6 +425,16 @@ select:hover {
 .primary-button:disabled {
   cursor: wait;
   opacity: 0.62;
+}
+
+.field-inline {
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+}
+
+.field-inline .select-wrap {
+  width: 172px;
 }
 
 .ranking-hint {
@@ -563,6 +669,40 @@ select:hover {
   line-height: 1.05;
 }
 
+.score[data-tier="s"] {
+  color: var(--score-s);
+}
+
+.score[data-tier="a"] {
+  color: var(--score-a);
+}
+
+.score[data-tier="b"] {
+  color: var(--score-b);
+}
+
+.score[data-tier="c"] {
+  color: var(--score-c);
+}
+
+.score[data-tier="d"] {
+  color: var(--score-d);
+}
+
+.score[data-tier="e"] {
+  color: var(--score-e);
+}
+
+.score[data-tier="none"] {
+  color: var(--faint);
+}
+
+.metric-secondary .score {
+  font-family: ui-monospace, "SFMono-Regular", Consolas, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+}
+
 .metric-label,
 .metric-secondary {
   display: block;
@@ -628,7 +768,14 @@ select:hover {
   }
 
   .site-header {
+    grid-template-columns: minmax(0, 1fr);
     gap: 14px;
+  }
+
+  .header-controls {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
   }
 
   h1 {
@@ -656,6 +803,11 @@ select:hover {
   .form-actions {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .field-inline .select-wrap {
+    width: auto;
+    flex: 1;
   }
 
   .primary-button {
@@ -696,6 +848,10 @@ select:hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .theme-swatch:hover {
+    transform: none;
+  }
+
   *,
   *::before,
   *::after {

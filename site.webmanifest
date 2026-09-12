@@ -1,7 +1,7 @@
 {
-  "name": "Airing Year — Anime Finder",
-  "short_name": "Airing Year",
-  "description": "Find the best anime that aired in a selected year using AniList data.",
+  "name": "Anime by Year — the best anime of any year",
+  "short_name": "Anime by Year",
+  "description": "Find the highest-rated anime of any year using AniList data.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#f1f0ea",

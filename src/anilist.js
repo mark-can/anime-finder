@@ -5,9 +5,7 @@ import {
   INITIAL_REQUEST_GAP_MS,
   MAX_PAGES_PER_PASS,
   REQUEST_TIMEOUT_MS,
-  TOP_N,
 } from "./config.js";
-import { normalizeMedia } from "./domain.js";
 
 function buildMediaQuery(variables, serverSort) {
   const declarations = ["$page:Int"];
@@ -23,6 +21,10 @@ function buildMediaQuery(variables, serverSort) {
   if (variables.endGt) {
     declarations.push("$endGt:FuzzyDateInt");
     argumentsList.push("endDate_greater:$endGt");
+  }
+  if (variables.popularityGt) {
+    declarations.push("$popularityGt:Int");
+    argumentsList.push("popularity_greater:$popularityGt");
   }
   if (variables.statusIn) {
     declarations.push("$statusIn:[MediaStatus]");
@@ -234,14 +236,11 @@ function queryPasses(filters) {
   ];
 }
 
-function hasEnoughForScore(media, minRatings) {
-  let qualifying = 0;
-  for (const item of media) {
-    const normalized = normalizeMedia(item);
-    if (normalized.score > 0 && normalized.ratings >= minRatings) qualifying += 1;
-    if (qualifying >= TOP_N) return true;
-  }
-  return false;
+// A title can only be rated by users who have it on their list, so its rating
+// count never exceeds its popularity. Asking AniList to skip anything well below
+// the ratings threshold prunes most pages without dropping a single match.
+function popularityFloor(minRatings) {
+  return minRatings > 0 ? Math.floor(minRatings * 0.9) : null;
 }
 
 export async function collectMedia(filters, { signal, onProgress, onWait } = {}) {
@@ -251,7 +250,6 @@ export async function collectMedia(filters, { signal, onProgress, onWait } = {})
 
   for (let passIndex = 0; passIndex < passes.length; passIndex += 1) {
     const pass = passes[passIndex];
-    const passItems = [];
 
     for (let page = 1; page <= MAX_PAGES_PER_PASS; page += 1) {
       if (signal.aborted) throw abortError();
@@ -267,6 +265,7 @@ export async function collectMedia(filters, { signal, onProgress, onWait } = {})
           page,
           genre: filters.genre || null,
           formatIn: filters.formats,
+          popularityGt: popularityFloor(filters.minRatings),
           serverSort: filters.sort === "votes" ? "POPULARITY_DESC" : "SCORE_DESC",
           ...pass,
         },
@@ -274,12 +273,10 @@ export async function collectMedia(filters, { signal, onProgress, onWait } = {})
       );
 
       for (const media of data.media) {
-        passItems.push(media);
         if (!collected.has(media.id)) collected.set(media.id, media);
       }
 
       if (!data.pageInfo.hasNextPage) break;
-      if (filters.sort === "score" && hasEnoughForScore(passItems, filters.minRatings)) break;
       if (page === MAX_PAGES_PER_PASS) truncated = true;
     }
   }

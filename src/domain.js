@@ -57,7 +57,22 @@ export function filterMedia(media, filters) {
   });
 }
 
-export function rankMedia(media, sort, minRatings, limit) {
+// Six steps from "exceptional" to "weak". Discrete tiers keep every colour at a
+// legible contrast instead of washing out in the middle of a continuous ramp.
+const SCORE_TIERS = [
+  { min: 8.5, tier: "s" },
+  { min: 8, tier: "a" },
+  { min: 7.5, tier: "b" },
+  { min: 7, tier: "c" },
+  { min: 6, tier: "d" },
+];
+
+export function scoreTier(score) {
+  if (!Number.isFinite(score) || score <= 0) return "none";
+  return SCORE_TIERS.find((step) => score >= step.min)?.tier ?? "e";
+}
+
+export function rankMedia(media, sort, minRatings, limit = 0) {
   const average = media.reduce((total, item) => total + item.score, 0) / (media.length || 1);
   const prior = Math.max(minRatings, 2_000);
   const ranked = media.map((item) => ({
@@ -73,7 +88,7 @@ export function rankMedia(media, sort, minRatings, limit) {
     return right.score - left.score || right.ratings - left.ratings;
   });
 
-  return ranked.slice(0, Math.max(1, limit));
+  return limit > 0 ? ranked.slice(0, limit) : ranked;
 }
 
 export function timelineFor(media, year) {

@@ -1,14 +1,17 @@
 import { ApiError, collectMedia } from "./anilist.js";
 import {
-  DEFAULT_FILTERS,
+  DEFAULT_THEME,
   FORMATS,
   GENRES,
+  LIMIT_OPTIONS,
   MAX_YEAR,
   MIN_RATING_OPTIONS,
   MIN_YEAR,
-  TOP_N,
+  THEME_COLORS,
+  THEME_STORAGE_KEY,
+  THEMES,
 } from "./config.js";
-import { filterMedia, normalizeMedia, rankMedia, safeHttpsUrl, timelineFor } from "./domain.js";
+import { filterMedia, normalizeMedia, rankMedia, safeHttpsUrl, scoreTier, timelineFor } from "./domain.js";
 import {
   compactNumber,
   COPY,
@@ -16,6 +19,7 @@ import {
   episodeText,
   formatNumber,
   genreName,
+  limitLabel,
   rankingHint,
   ratingsText,
   titleCountText,
@@ -24,16 +28,20 @@ import { buildShareUrl, parseUrlState, sameFilters } from "./state.js";
 
 const elements = {
   form: document.querySelector("#filters"),
+  eyebrow: document.querySelector("#eyebrow"),
   appTitle: document.querySelector("#app-title"),
   tagline: document.querySelector("#tagline"),
   langEn: document.querySelector("#lang-en"),
   langRu: document.querySelector("#lang-ru"),
   languageGroup: document.querySelector(".language-switch"),
+  themeSwitch: document.querySelector("#theme-switch"),
+  themeColorMeta: document.querySelector('meta[name="theme-color"]'),
   year: document.querySelector("#year"),
   genre: document.querySelector("#genre"),
   minRatings: document.querySelector("#min-ratings"),
   status: document.querySelector("#airing-status"),
   sort: document.querySelector("#sort"),
+  limit: document.querySelector("#limit"),
   formats: document.querySelector("#format-options"),
   submit: document.querySelector("#submit-button"),
   hint: document.querySelector("#ranking-hint"),
@@ -51,11 +59,22 @@ const labels = {
   minRatings: document.querySelector("#ratings-label"),
   status: document.querySelector("#status-label"),
   sort: document.querySelector("#sort-label"),
+  limit: document.querySelector("#limit-label"),
   formats: document.querySelector("#formats-label"),
 };
 
+function storedTheme() {
+  try {
+    const saved = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return THEMES.includes(saved) ? saved : DEFAULT_THEME;
+  } catch {
+    return DEFAULT_THEME;
+  }
+}
+
 const initial = parseUrlState();
 let language = initial.language;
+let theme = storedTheme();
 let filters = { ...initial.filters, formats: [...initial.filters.formats] };
 let activeController = null;
 let activeRequestId = 0;
@@ -79,6 +98,41 @@ function replaceOptions(select, options, selectedValue) {
 function updateUrl() {
   const url = buildShareUrl(filters, language);
   history.replaceState(null, "", url);
+}
+
+function applyTheme() {
+  document.documentElement.dataset.theme = theme;
+  if (elements.themeColorMeta) elements.themeColorMeta.content = THEME_COLORS[theme] ?? THEME_COLORS[DEFAULT_THEME];
+  for (const button of elements.themeSwitch.querySelectorAll(".theme-swatch")) {
+    button.setAttribute("aria-pressed", String(button.dataset.themeName === theme));
+  }
+}
+
+function renderThemeSwitch() {
+  const t = COPY[language];
+  const fragment = document.createDocumentFragment();
+  for (const name of THEMES) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "theme-swatch";
+    button.dataset.themeName = name;
+    button.setAttribute("aria-pressed", String(name === theme));
+    button.setAttribute("aria-label", t.themes[name] ?? name);
+    button.title = t.themes[name] ?? name;
+    fragment.append(button);
+  }
+  elements.themeSwitch.replaceChildren(fragment);
+}
+
+function setTheme(nextTheme) {
+  if (!THEMES.includes(nextTheme) || nextTheme === theme) return;
+  theme = nextTheme;
+  applyTheme();
+  try {
+    window.localStorage.setItem(THEME_STORAGE_KEY, theme);
+  } catch {
+    // A blocked storage API only costs the preference on the next visit.
+  }
 }
 
 function renderControls() {
@@ -109,6 +163,11 @@ function renderControls() {
     Object.entries(t.sorts).map(([value, label]) => ({ value, label })),
     filters.sort,
   );
+  replaceOptions(
+    elements.limit,
+    LIMIT_OPTIONS.map((value) => ({ value, label: limitLabel(value, language) })),
+    filters.limit,
+  );
 
   const formatFragment = document.createDocumentFragment();
   for (const format of FORMATS) {
@@ -133,19 +192,23 @@ function renderLanguage() {
   document.documentElement.lang = language;
   document.title = t.documentTitle;
   document.querySelector('meta[name="description"]').content = t.description;
+  elements.eyebrow.textContent = t.eyebrow;
   elements.appTitle.textContent = t.appTitle;
   elements.tagline.textContent = t.tagline;
   elements.languageGroup.setAttribute("aria-label", t.labels.language);
+  elements.themeSwitch.setAttribute("aria-label", t.labels.theme);
   elements.langEn.setAttribute("aria-pressed", String(language === "en"));
   elements.langRu.setAttribute("aria-pressed", String(language === "ru"));
   for (const [key, element] of Object.entries(labels)) element.textContent = t.labels[key];
   elements.submit.textContent = busy ? t.loadingButton : t.show;
-  elements.hint.textContent = rankingHint(filters.sort, TOP_N, language);
+  elements.hint.textContent = rankingHint(filters.sort, filters.limit, language);
   elements.footer.replaceChildren(
     document.createTextNode(t.footerBefore),
     externalLink("https://anilist.co", "AniList"),
     document.createTextNode(t.footerAfter),
   );
+  renderThemeSwitch();
+  applyTheme();
   renderControls();
   if (currentResults) renderResults(currentResults, false);
 }
@@ -165,6 +228,7 @@ function readFilters() {
     minRatings: Number(elements.minRatings.value),
     status: elements.status.value,
     sort: elements.sort.value,
+    limit: Number(elements.limit.value),
     formats: [...elements.form.querySelectorAll('input[name="formats"]:checked')].map((input) => input.value),
   };
 }
@@ -206,6 +270,16 @@ function badge(text, className) {
   return item;
 }
 
+// The number carries the score on its own; the colour is a redundant cue, so a
+// reader who cannot tell the tiers apart loses nothing.
+function scoreText(score, digits = 1) {
+  const item = document.createElement("span");
+  item.className = "score";
+  item.dataset.tier = scoreTier(score);
+  item.textContent = score.toFixed(digits);
+  return item;
+}
+
 function renderMetric(container, media, sort) {
   const t = COPY[language];
   const value = document.createElement("strong");
@@ -218,12 +292,20 @@ function renderMetric(container, media, sort) {
   if (sort === "votes") {
     value.textContent = compactNumber(media.ratings, language);
     label.textContent = t.metric.ratings;
-    secondary.textContent = `${t.metric.score} ${media.score.toFixed(1)}`;
+    secondary.append(document.createTextNode(`${t.metric.score} `), scoreText(media.score));
   } else if (sort === "bayes") {
+    value.className = "metric-value score";
+    value.dataset.tier = scoreTier(media.weightedScore);
     value.textContent = media.weightedScore.toFixed(2);
     label.textContent = t.metric.weighted;
-    secondary.textContent = `${t.metric.score} ${media.score.toFixed(1)} · ${ratingsText(media.ratings, language)}`;
+    secondary.append(
+      document.createTextNode(`${t.metric.score} `),
+      scoreText(media.score),
+      document.createTextNode(` · ${ratingsText(media.ratings, language)}`),
+    );
   } else {
+    value.className = "metric-value score";
+    value.dataset.tier = scoreTier(media.score);
     value.textContent = media.score.toFixed(1);
     label.textContent = t.metric.score;
     secondary.textContent = ratingsText(media.ratings, language);
@@ -325,16 +407,27 @@ function renderResultCard(media, index, searchFilters) {
   return card;
 }
 
+function visibleItems(result) {
+  const limit = result.filters.limit;
+  return limit > 0 ? result.all.slice(0, limit) : result.all;
+}
+
 function renderResults(result, shouldFocus = true) {
   currentResults = result;
   const t = COPY[language];
+  const items = visibleItems(result);
   const genre = result.filters.genre ? genreName(result.filters.genre, language) : t.allGenres.toLocaleLowerCase(t.locale);
   elements.resultsTitle.textContent = t.resultsFor(genre, result.filters.year);
-  elements.resultsCount.textContent = titleCountText(result.items.length, result.filters.minRatings, language);
+  elements.resultsCount.textContent = titleCountText(
+    items.length,
+    result.all.length,
+    result.filters.minRatings,
+    language,
+  );
   elements.resultsCount.className = "results-count";
 
   const fragment = document.createDocumentFragment();
-  result.items.forEach((media, index) => fragment.append(renderResultCard(media, index, result.filters)));
+  items.forEach((media, index) => fragment.append(renderResultCard(media, index, result.filters)));
   elements.resultList.replaceChildren(fragment);
   elements.results.hidden = false;
   if (shouldFocus) elements.resultsTitle.focus({ preventScroll: true });
@@ -353,7 +446,7 @@ function userMessageFor(error) {
 async function runSearch({ updateHistory = true } = {}) {
   const nextFilters = readFilters();
   filters = nextFilters;
-  elements.hint.textContent = rankingHint(filters.sort, TOP_N, language);
+  elements.hint.textContent = rankingHint(filters.sort, filters.limit, language);
   if (updateHistory) updateUrl();
 
   if (filters.formats.length === 0) {
@@ -385,14 +478,15 @@ async function runSearch({ updateHistory = true } = {}) {
 
     const normalized = response.media.map(normalizeMedia);
     const matches = filterMedia(normalized, searchFilters);
-    const items = rankMedia(matches, searchFilters.sort, searchFilters.minRatings, TOP_N);
+    // Rank the complete match set; the limit only decides how much of it is shown.
+    const all = rankMedia(matches, searchFilters.sort, searchFilters.minRatings);
 
-    if (items.length === 0) {
+    if (all.length === 0) {
       setStatus(COPY[language].empty);
       return;
     }
 
-    renderResults({ items, filters: searchFilters, truncated: response.truncated });
+    renderResults({ all, filters: searchFilters, truncated: response.truncated });
     setStatus(response.truncated ? COPY[language].truncated : "", response.truncated ? "warning" : "info");
   } catch (error) {
     if (error.name !== "AbortError" && requestId === activeRequestId) {
@@ -419,22 +513,44 @@ elements.form.addEventListener("submit", (event) => {
   runSearch();
 });
 
+function onlyLimitChanged(current, next) {
+  return current.limit !== next.limit && sameFilters({ ...current, limit: next.limit }, next);
+}
+
 elements.form.addEventListener("change", () => {
   const nextFilters = readFilters();
   if (sameFilters(filters, nextFilters)) return;
+
+  // The list is already complete, so a new limit just trims it — no refetch needed.
+  if (currentResults && !busy && onlyLimitChanged(filters, nextFilters)) {
+    filters = nextFilters;
+    elements.hint.textContent = rankingHint(filters.sort, filters.limit, language);
+    updateUrl();
+    renderResults(
+      { ...currentResults, filters: { ...currentResults.filters, limit: filters.limit } },
+      false,
+    );
+    return;
+  }
+
   filters = nextFilters;
   activeController?.abort();
   activeRequestId += 1;
   activeController = null;
   setBusy(false);
   hideResults();
-  elements.hint.textContent = rankingHint(filters.sort, TOP_N, language);
+  elements.hint.textContent = rankingHint(filters.sort, filters.limit, language);
   updateUrl();
   setStatus(COPY[language].filtersChanged);
 });
 
 elements.langEn.addEventListener("click", () => setLanguage("en"));
 elements.langRu.addEventListener("click", () => setLanguage("ru"));
+
+elements.themeSwitch.addEventListener("click", (event) => {
+  const button = event.target.closest(".theme-swatch");
+  if (button) setTheme(button.dataset.themeName);
+});
 
 renderLanguage();
 updateUrl();

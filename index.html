@@ -5,21 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       name="description"
-      content="Find the best anime that aired in a selected year, filtered by genre, format, status and number of ratings."
+      content="Find the best anime of any year: filter by genre, format, airing status and number of ratings, then list every match or just the top titles."
     />
     <meta name="theme-color" content="#2e4260" />
     <meta property="og:type" content="website" />
-    <meta property="og:title" content="Airing Year — Anime Finder" />
+    <meta property="og:title" content="Anime by Year — the best anime of any year" />
     <meta
       property="og:description"
-      content="Explore the best anime that aired in a selected year using AniList data."
+      content="Explore the highest-rated anime of any year using AniList data."
     />
     <meta property="og:url" content="https://mark-can.github.io/anime-finder/" />
     <link rel="canonical" href="https://mark-can.github.io/anime-finder/" />
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
     <link rel="manifest" href="site.webmanifest" />
     <link rel="stylesheet" href="styles.css" />
-    <title>Airing Year — Anime Finder</title>
+    <title>Anime by Year — the best anime of any year</title>
   </head>
   <body>
     <a class="skip-link" href="#results">Skip to results</a>
@@ -27,16 +27,20 @@
     <main class="page-shell">
       <header class="site-header">
         <div class="site-heading">
-          <p class="eyebrow">AniList archive</p>
-          <h1 id="app-title">Airing Year</h1>
+          <p id="eyebrow" class="eyebrow">AniList archive</p>
+          <h1 id="app-title">Anime by Year</h1>
           <p id="tagline" class="tagline">
-            The best anime of a given year by genre — including shows that started earlier and kept airing.
+            The highest-rated anime of any year, by genre — including series that started earlier and were still airing.
           </p>
         </div>
 
-        <div class="language-switch" role="group" aria-label="Language">
-          <button id="lang-en" class="language-button" type="button" lang="en" aria-pressed="true">EN</button>
-          <button id="lang-ru" class="language-button" type="button" lang="ru" aria-pressed="false">RU</button>
+        <div class="header-controls">
+          <div id="theme-switch" class="theme-switch" role="group" aria-label="Accent colour"></div>
+
+          <div class="language-switch" role="group" aria-label="Language">
+            <button id="lang-en" class="language-button" type="button" lang="en" aria-pressed="true">EN</button>
+            <button id="lang-ru" class="language-button" type="button" lang="ru" aria-pressed="false">RU</button>
+          </div>
         </div>
       </header>
 
@@ -83,7 +87,15 @@
 
         <div class="form-actions">
           <button id="submit-button" class="primary-button" type="submit">Show results</button>
-          <p id="ranking-hint" class="ranking-hint">Top 50 by AniList score</p>
+
+          <div class="field field-inline">
+            <label id="limit-label" for="limit">Results shown</label>
+            <div class="select-wrap">
+              <select id="limit" name="limit"></select>
+            </div>
+          </div>
+
+          <p id="ranking-hint" class="ranking-hint">Every match, sorted by AniList score</p>
         </div>
       </form>
 

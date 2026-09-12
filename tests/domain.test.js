@@ -1,6 +1,13 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { filterMedia, normalizeMedia, overlapsYear, rankMedia, timelineFor } from "../src/domain.js";
+import {
+  filterMedia,
+  normalizeMedia,
+  overlapsYear,
+  rankMedia,
+  scoreTier,
+  timelineFor,
+} from "../src/domain.js";
 
 function rawMedia(overrides = {}) {
   return {
@@ -74,6 +81,42 @@ test("rankMedia changes the primary order for score and ratings", () => {
 
   assert.deepEqual(rankMedia([popular, highScore], "score", 0, 50).map((item) => item.id), [1, 2]);
   assert.deepEqual(rankMedia([popular, highScore], "votes", 0, 50).map((item) => item.id), [2, 1]);
+});
+
+test("rankMedia returns every title when no limit is set", () => {
+  const media = Array.from({ length: 7 }, (_, index) => ({
+    ...normalizeMedia(rawMedia()),
+    id: index + 1,
+    score: 9 - index * 0.1,
+  }));
+
+  assert.equal(rankMedia(media, "score", 0).length, 7);
+  assert.equal(rankMedia(media, "score", 0, 0).length, 7);
+  assert.equal(rankMedia(media, "score", 0, 3).length, 3);
+});
+
+test("rankMedia keeps the same order whether or not the list is trimmed", () => {
+  const media = [
+    { ...normalizeMedia(rawMedia()), id: 1, score: 7.5, ratings: 9_000 },
+    { ...normalizeMedia(rawMedia()), id: 2, score: 8.4, ratings: 1_200 },
+    { ...normalizeMedia(rawMedia()), id: 3, score: 8.9, ratings: 4_000 },
+  ];
+  const full = rankMedia(media, "score", 0).map((item) => item.id);
+
+  assert.deepEqual(full, [3, 2, 1]);
+  assert.deepEqual(rankMedia(media, "score", 0, 2).map((item) => item.id), full.slice(0, 2));
+});
+
+test("scoreTier maps a score onto one of six colour steps", () => {
+  assert.equal(scoreTier(9.2), "s");
+  assert.equal(scoreTier(8.5), "s");
+  assert.equal(scoreTier(8.49), "a");
+  assert.equal(scoreTier(7.5), "b");
+  assert.equal(scoreTier(7), "c");
+  assert.equal(scoreTier(6.4), "d");
+  assert.equal(scoreTier(5.9), "e");
+  assert.equal(scoreTier(0), "none");
+  assert.equal(scoreTier(Number.NaN), "none");
 });
 
 test("timelineFor uses real leap-year day counts", () => {

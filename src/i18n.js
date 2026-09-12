@@ -22,19 +22,32 @@ const RU_GENRES = {
 export const COPY = {
   en: {
     locale: "en-US",
-    appTitle: "Airing Year",
-    documentTitle: "Airing Year — Anime Finder",
-    description: "Find the best anime that aired in a selected year, filtered by genre, format, status and number of ratings.",
-    tagline: "The best anime of a given year by genre — including shows that started earlier and kept airing.",
+    eyebrow: "AniList archive",
+    appTitle: "Anime by Year",
+    documentTitle: "Anime by Year — the best anime of any year",
+    description: "Find the best anime of any year: filter by genre, format, airing status and number of ratings, then list every match or just the top titles.",
+    tagline: "The highest-rated anime of any year, by genre — including series that started earlier and were still airing.",
     labels: {
       language: "Language",
+      theme: "Accent colour",
       year: "Year",
       genre: "Genre",
       minRatings: "Minimum ratings",
       status: "Airing status",
       sort: "Sort by",
+      limit: "Results shown",
       formats: "Formats",
     },
+    themes: {
+      ink: "Ink",
+      teal: "Teal",
+      forest: "Forest",
+      plum: "Plum",
+      rust: "Rust",
+      graphite: "Graphite",
+    },
+    allResults: "All matches",
+    topN: (count) => `Top ${count}`,
     allGenres: "All genres",
     noMinimum: "No minimum",
     statuses: { any: "Any", finished: "Fully aired", ongoing: "Still airing" },
@@ -49,7 +62,7 @@ export const COPY = {
     waiting: (seconds) => `AniList asked us to slow down. Retrying in ${seconds}s…`,
     noFormats: "Pick at least one format.",
     empty: "Nothing matched. Lower the ratings threshold or add more formats.",
-    truncated: "AniList returned more matches than could be loaded safely. The list may be incomplete; narrow the filters and try again.",
+    truncated: "AniList returned more titles than could be loaded safely, so the end of the list is missing. Raise the minimum ratings or narrow the filters for a complete list.",
     errors: {
       rateLimit: (seconds) => `AniList rate limit reached. Wait ${seconds}s and try again.`,
       unavailable: "AniList is temporarily unavailable. Try again later.",
@@ -64,25 +77,38 @@ export const COPY = {
     mal: "Open on MyAnimeList",
     anilist: "Open on AniList",
     footerBefore: "Data from ",
-    footerAfter: ". Scores are rescaled to 10. “Ratings” means the number of people who actually submitted a score.",
+    footerAfter: ". Scores are rescaled to 10 and coloured from green (top-rated) down to red. “Ratings” means the number of people who actually submitted a score.",
     months: ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
     ongoing: "ongoing",
   },
   ru: {
     locale: "ru-RU",
-    appTitle: "Что выходило",
-    documentTitle: "Что выходило — поиск аниме",
-    description: "Поиск лучшего аниме выбранного года по жанру, формату, статусу и числу оценок.",
-    tagline: "Лучшее аниме года по жанру — включая сериалы, которые начались раньше, но продолжали выходить.",
+    eyebrow: "Архив AniList",
+    appTitle: "Аниме по годам",
+    documentTitle: "Аниме по годам — лучшее аниме любого года",
+    description: "Лучшее аниме любого года: фильтры по жанру, формату, статусу показа и числу оценок, полный список или только топ.",
+    tagline: "Самое высокооценённое аниме любого года по жанру — включая сериалы, которые начались раньше и продолжали выходить.",
     labels: {
       language: "Язык",
+      theme: "Цвет акцента",
       year: "Год",
       genre: "Жанр",
       minRatings: "Минимум оценок",
       status: "Статус показа",
       sort: "Сортировка",
+      limit: "Сколько показывать",
       formats: "Форматы",
     },
+    themes: {
+      ink: "Чернила",
+      teal: "Бирюза",
+      forest: "Хвоя",
+      plum: "Слива",
+      rust: "Ржавчина",
+      graphite: "Графит",
+    },
+    allResults: "Все совпадения",
+    topN: (count) => `Топ-${count}`,
     allGenres: "Все жанры",
     noMinimum: "Без ограничения",
     statuses: { any: "Любой", finished: "Все серии вышли", ongoing: "Ещё выходит" },
@@ -97,7 +123,7 @@ export const COPY = {
     waiting: (seconds) => `AniList просит снизить частоту запросов. Повтор через ${seconds} с…`,
     noFormats: "Выбери хотя бы один формат.",
     empty: "Ничего не нашлось. Понизь порог оценок или добавь форматы.",
-    truncated: "AniList вернул больше данных, чем можно безопасно загрузить. Список может быть неполным — сузь фильтры и повтори поиск.",
+    truncated: "AniList вернул больше тайтлов, чем можно безопасно загрузить, поэтому конец списка не попал в выдачу. Подними минимум оценок или сузь фильтры, чтобы получить полный список.",
     errors: {
       rateLimit: (seconds) => `Лимит запросов AniList исчерпан. Подожди ${seconds} с и повтори.`,
       unavailable: "AniList временно недоступен. Попробуй позже.",
@@ -112,7 +138,7 @@ export const COPY = {
     mal: "Открыть на MyAnimeList",
     anilist: "Открыть на AniList",
     footerBefore: "Данные — ",
-    footerAfter: ". Оценка приведена к десятибалльной шкале. «Оценок» — количество пользователей, которые действительно поставили балл.",
+    footerAfter: ". Оценка приведена к десятибалльной шкале, её цвет меняется от зелёного (высокая) к красному (низкая). «Оценок» — количество пользователей, которые действительно поставили балл.",
     months: ["янв", "фев", "мар", "апр", "май", "июн", "июл", "авг", "сен", "окт", "ноя", "дек"],
     ongoing: "идёт",
   },
@@ -148,23 +174,36 @@ export function ratingsText(value, language) {
   return `${count} rating${value === 1 ? "" : "s"}`;
 }
 
-export function titleCountText(value, minRatings, language) {
-  const count = formatNumber(value, language);
-  const suffix = minRatings > 0 ? ` · ${formatNumber(minRatings, language)}+` : "";
-  if (language === "ru") {
-    return `${count} ${ruPlural(value, { one: "тайтл", few: "тайтла", many: "тайтлов" })}${suffix}`;
-  }
-  return `${count} title${value === 1 ? "" : "s"}${suffix}`;
+export function limitLabel(limit, language) {
+  const t = COPY[language];
+  return limit > 0 ? t.topN(formatNumber(limit, language)) : t.allResults;
 }
 
-export function rankingHint(sort, topN, language) {
-  const t = COPY[language];
+export function titleCountText(shown, total, minRatings, language) {
+  const suffix = minRatings > 0 ? ` · ${formatNumber(minRatings, language)}+` : "";
+  const isPartial = shown < total;
+  if (language === "ru") {
+    const noun = ruPlural(total, { one: "тайтл", few: "тайтла", many: "тайтлов" });
+    const head = isPartial
+      ? `${formatNumber(shown, language)} из ${formatNumber(total, language)}`
+      : formatNumber(total, language);
+    return `${head} ${noun}${suffix}`;
+  }
+  const noun = `title${total === 1 ? "" : "s"}`;
+  const head = isPartial
+    ? `${formatNumber(shown, language)} of ${formatNumber(total, language)}`
+    : formatNumber(total, language);
+  return `${head} ${noun}${suffix}`;
+}
+
+export function rankingHint(sort, limit, language) {
   const by = {
     score: language === "ru" ? "по оценке AniList" : "by AniList score",
     bayes: language === "ru" ? "по взвешенной оценке" : "by weighted score",
     votes: language === "ru" ? "по числу оценок" : "by number of ratings",
   }[sort];
-  return language === "ru" ? `Топ-${topN} ${by}` : `Top ${topN} ${by}`;
+  if (limit > 0) return `${limitLabel(limit, language)} ${by}`;
+  return language === "ru" ? `Все совпадения ${by}` : `Every match, sorted ${by}`;
 }
 
 export function episodeText(media, language) {

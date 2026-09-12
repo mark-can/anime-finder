@@ -1,6 +1,6 @@
-# Anime Finder
+# Anime by Year
 
-Find the best anime that aired in a selected year using public data from the [AniList API](https://docs.anilist.co/).
+Find the highest-rated anime of any year using public data from the [AniList API](https://docs.anilist.co/).
 
 Live site: <https://mark-can.github.io/anime-finder/>
 
@@ -8,6 +8,9 @@ Live site: <https://mark-can.github.io/anime-finder/>
 
 - Filter by year, genre, airing status, minimum number of ratings, and format.
 - Rank by AniList score, weighted score, or number of ratings.
+- List every match by default, or trim the list to the top 10, 25, 50, or 100.
+- Scores are colour-coded in six steps, from green for top-rated down to red.
+- Six accent themes, remembered between visits.
 - Include series that started in an earlier year but continued airing in the selected year.
 - English and Russian interface.
 - Shareable URLs that preserve all filters.
@@ -69,4 +72,11 @@ Every new commit to `main` will then update the live site after GitHub Pages fin
 
 - Scores are AniList average scores rescaled from 100 to 10.
 - “Ratings” is calculated from AniList's score distribution and represents users who submitted a score.
+- A title can only be scored by users who have it on their list, so its rating count never exceeds its
+  popularity. The client passes the ratings threshold to AniList as a `popularity_greater` filter, which
+  prunes most pages server-side without dropping a single match.
+- Score colours are a redundant cue: the number itself is always shown, so the list stays readable
+  without relying on colour.
 - AniList may temporarily lower its API rate limit. The client reads the response headers, waits between requests, retries one rate-limited request, and reports incomplete searches when the safety pagination limit is reached.
+- Because the full list is loaded up front, the result limit is applied locally: changing it re-renders the
+  list without another API request.
