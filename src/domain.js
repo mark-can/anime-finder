@@ -191,15 +191,17 @@ export function trailerLinks(trailer) {
   return null;
 }
 
-const SERIES_FORMATS = new Set(["TV", "TV_SHORT", "ONA"]);
+const MAIN_FORMATS = new Set(["TV", "TV_SHORT", "ONA", "MOVIE"]);
 
-// A title counts as a sequel when its prequel is another series, or a work of
-// the same format (a film following a film). A prequel OVA or special — Attack
-// on Titan's first season has one — does not make a first season a sequel.
+// A title counts as a sequel when its prequel is a series or a film — or a work
+// of its own format (an OVA following an OVA). A prequel OVA or special does not
+// make a series a sequel: Attack on Titan's first season has one. Films count
+// because franchises such as KonoSuba bridge seasons with a film, which then
+// becomes the next season's only prequel.
 export function hasMainPrequel(relations, format) {
   return (relations?.edges ?? []).some((edge) => {
     if (edge?.relationType !== "PREQUEL" || edge.node?.type !== "ANIME") return false;
-    return SERIES_FORMATS.has(edge.node.format) || edge.node.format === format;
+    return MAIN_FORMATS.has(edge.node.format) || edge.node.format === format;
   });
 }
 

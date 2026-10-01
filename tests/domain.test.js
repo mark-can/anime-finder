@@ -187,12 +187,13 @@ test("filterMedia drops titles from another country", () => {
   assert.deepEqual(filterMedia([japanese, chinese], filters).map((item) => item.id), [1]);
 });
 
-test("a prequel OVA does not make a first season a sequel, a prequel series does", () => {
+test("a prequel OVA does not make a first season a sequel, a prequel series or film does", () => {
   const edge = (relationType, format, type = "ANIME") => ({ relationType, node: { id: 9, type, format } });
 
   assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "OVA"), edge("SEQUEL", "TV")] }, "TV"), false);
   assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "TV")] }, "TV"), true);
-  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "MOVIE")] }, "MOVIE"), true);
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "MOVIE")] }, "TV"), true);
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "OVA")] }, "OVA"), true);
   assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "MANGA", "MANGA")] }, "TV"), false);
   assert.equal(hasMainPrequel(null, "TV"), false);
 });
