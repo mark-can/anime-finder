@@ -1,12 +1,21 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  cleanDescription,
+  deriveView,
   filterMedia,
+  hasMainPrequel,
+  isHiddenByList,
+  normalizeDetails,
   normalizeMedia,
+  overlapsPeriod,
   overlapsYear,
+  periodFor,
+  pickRankings,
   rankMedia,
   scoreTier,
   timelineFor,
+  trailerLinks,
 } from "../src/domain.js";
 
 function rawMedia(overrides = {}) {
@@ -131,4 +140,146 @@ test("timelineFor uses real leap-year day counts", () => {
   assert.ok(Math.abs(timeline.left - (60 / 366) * 100) < 0.001);
   assert.equal(timeline.spillsLeft, false);
   assert.equal(timeline.spillsRight, false);
+});
+
+test("normalizeMedia prefers the large cover and falls back to the native title", () => {
+  const media = normalizeMedia(
+    rawMedia({
+      title: { native: "葬送のフリーレン" },
+      coverImage: { large: "https://example.com/large.jpg", medium: "https://example.com/medium.jpg", color: "#e4a15d" },
+    }),
+  );
+
+  assert.equal(media.cover, "https://example.com/large.jpg");
+  assert.equal(media.title, "葬送のフリーレン");
+  assert.equal(media.color, "#e4a15d");
+});
+
+test("periodFor maps seasons onto calendar quarters", () => {
+  assert.deepEqual(periodFor(2024, "WINTER"), {
+    start: { year: 2024, month: 1, day: 1 },
+    end: { year: 2024, month: 3, day: 31 },
+  });
+  assert.deepEqual(periodFor(2024, "FALL").end, { year: 2024, month: 12, day: 31 });
+  assert.deepEqual(periodFor(2024), periodFor(2024, ""));
+});
+
+test("a season filter keeps titles airing in that quarter, including carry-overs", () => {
+  const winter = normalizeMedia(rawMedia());
+  const fromFall = normalizeMedia(
+    rawMedia({ id: 2, startDate: { year: 2023, month: 10, day: 5 }, endDate: { year: 2024, month: 3, day: 20 } }),
+  );
+  const summer = normalizeMedia(
+    rawMedia({ id: 3, startDate: { year: 2024, month: 7, day: 5 }, endDate: { year: 2024, month: 9, day: 20 } }),
+  );
+
+  assert.equal(overlapsPeriod(fromFall, periodFor(2024, "WINTER")), true);
+  assert.equal(overlapsPeriod(summer, periodFor(2024, "WINTER")), false);
+  const filters = { year: 2024, season: "WINTER", minRatings: 0, status: "any", formats: ["TV"] };
+  assert.deepEqual(filterMedia([winter, fromFall, summer], filters).map((item) => item.id), [1, 2]);
+});
+
+test("filterMedia drops titles from another country", () => {
+  const japanese = normalizeMedia(rawMedia({ countryOfOrigin: "JP" }));
+  const chinese = normalizeMedia(rawMedia({ id: 2, countryOfOrigin: "CN" }));
+  const filters = { year: 2024, minRatings: 0, status: "any", formats: ["TV"], country: "JP" };
+
+  assert.deepEqual(filterMedia([japanese, chinese], filters).map((item) => item.id), [1]);
+});
+
+test("a prequel OVA does not make a first season a sequel, a prequel series or film does", () => {
+  const edge = (relationType, format, type = "ANIME") => ({ relationType, node: { id: 9, type, format } });
+
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "OVA"), edge("SEQUEL", "TV")] }, "TV"), false);
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "TV")] }, "TV"), true);
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "MOVIE")] }, "TV"), true);
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "OVA")] }, "OVA"), true);
+  assert.equal(hasMainPrequel({ edges: [edge("PREQUEL", "MANGA", "MANGA")] }, "TV"), false);
+  assert.equal(hasMainPrequel(null, "TV"), false);
+});
+
+test("cleanDescription strips markup and spoilers and decodes entities", () => {
+  const text = cleanDescription(
+    "Gold Roger&#039;s <i>treasure</i>.<br><br>\nThe end ~!secret ending!~&amp; more<br>(Source: AniList)",
+  );
+
+  assert.equal(text, "Gold Roger's treasure.\n\nThe end & more\n(Source: AniList)");
+  assert.equal(cleanDescription(null), "");
+});
+
+test("trailerLinks builds safe links and rejects malformed ids", () => {
+  // AniList data sometimes carries a stray tab after the id.
+  assert.deepEqual(trailerLinks({ id: "LHtdKWJdif4\t", site: "youtube" }), {
+    url: "https://www.youtube.com/watch?v=LHtdKWJdif4",
+    thumbnail: "https://i.ytimg.com/vi/LHtdKWJdif4/hqdefault.jpg",
+  });
+  assert.equal(trailerLinks({ id: "x\" onerror=", site: "youtube" }), null);
+  assert.equal(trailerLinks({ id: "abcdef", site: "vimeo" }), null);
+  assert.equal(trailerLinks(null), null);
+});
+
+test("normalizeDetails keeps live streaming links once per site, upgraded to https", () => {
+  const details = normalizeDetails(
+    {
+      externalLinks: [
+        { site: "Crunchyroll", url: "http://www.crunchyroll.com/x", type: "STREAMING", isDisabled: false },
+        { site: "Crunchyroll", url: "https://www.crunchyroll.com/y", type: "STREAMING", isDisabled: false },
+        { site: "Netflix", url: "https://netflix.com/z", type: "STREAMING", isDisabled: true },
+        { site: "Twitter", url: "https://twitter.com/x", type: "SOCIAL", isDisabled: false },
+        { site: "Evil", url: "javascript:alert(1)", type: "STREAMING", isDisabled: false },
+      ],
+      studios: { nodes: [{ name: "MADHOUSE", siteUrl: "https://anilist.co/studio/11" }] },
+      nextAiringEpisode: { episode: 8, airingAt: 1_800_000_000 },
+    },
+    "TV",
+  );
+
+  assert.deepEqual(details.streaming, [{ site: "Crunchyroll", url: "https://www.crunchyroll.com/x", language: null }]);
+  assert.deepEqual(details.studios, [{ name: "MADHOUSE", siteUrl: "https://anilist.co/studio/11" }]);
+  assert.deepEqual(details.nextEpisode, { episode: 8, airingAt: 1_800_000_000_000 });
+  assert.equal(details.isSequel, false);
+});
+
+test("pickRankings shows the yearly rank and a top-100 all-time rank", () => {
+  const rankings = [
+    { rank: 70, type: "RATED", allTime: true, year: null, season: null },
+    { rank: 1, type: "POPULAR", allTime: true, year: null, season: null },
+    { rank: 2, type: "RATED", allTime: false, year: 2013, season: null },
+    { rank: 1, type: "RATED", allTime: false, year: 2013, season: "SPRING" },
+  ];
+
+  assert.deepEqual(pickRankings(rankings).map((ranking) => ranking.rank), [2, 70]);
+  assert.deepEqual(pickRankings([{ rank: 150, type: "RATED", allTime: true }]), []);
+  assert.deepEqual(pickRankings(undefined), []);
+});
+
+test("isHiddenByList follows the selected mode", () => {
+  assert.equal(isHiddenByList({ status: "COMPLETED" }, "seen"), true);
+  assert.equal(isHiddenByList({ status: "DROPPED" }, "seen"), true);
+  assert.equal(isHiddenByList({ status: "PLANNING" }, "seen"), false);
+  assert.equal(isHiddenByList({ status: "PLANNING" }, "all"), true);
+  assert.equal(isHiddenByList({ status: "COMPLETED" }, "none"), false);
+  assert.equal(isHiddenByList(undefined, "all"), false);
+});
+
+test("deriveView hides sequels and listed titles, then ranks and trims", () => {
+  const item = (id, score, isSequel = false) => ({
+    ...normalizeMedia(rawMedia({ id })),
+    score,
+    details: { isSequel },
+  });
+  const matches = [item(1, 8), item(2, 9, true), item(3, 7), item(4, 8.5)];
+  const view = deriveView(matches, {
+    sort: "score",
+    minRatings: 0,
+    limit: 1,
+    firstSeasons: true,
+    listEntries: { 4: { status: "COMPLETED" } },
+    hideMode: "seen",
+  });
+
+  assert.deepEqual(view.all.map((media) => media.id), [1, 3]);
+  assert.deepEqual(view.visible.map((media) => media.id), [1]);
+  assert.equal(view.hiddenSequels, 1);
+  assert.equal(view.hiddenByList, 1);
 });
