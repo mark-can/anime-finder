@@ -1143,7 +1143,8 @@ select:disabled {
   }
 
   .filter-panel {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px 12px;
     margin-inline: -1px;
     padding: 20px;
   }
