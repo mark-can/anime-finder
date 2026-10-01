@@ -53,9 +53,16 @@
         </div>
 
         <div class="field">
-          <label id="genre-label" for="genre">Genre</label>
+          <label id="season-label" for="season">Season</label>
           <div class="select-wrap">
-            <select id="genre" name="genre"></select>
+            <select id="season" name="season"></select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label id="country-label" for="country">Country</label>
+          <div class="select-wrap">
+            <select id="country" name="country"></select>
           </div>
         </div>
 
@@ -80,9 +87,67 @@
           </div>
         </div>
 
+        <fieldset class="chip-field">
+          <legend id="genre-label">Genres</legend>
+          <div id="genre-options" class="chip-options"></div>
+          <p id="genre-hint" class="field-hint"></p>
+        </fieldset>
+
+        <fieldset class="chip-field">
+          <legend id="tags-label">Tags</legend>
+          <div class="tag-controls">
+            <div class="tag-entry">
+              <input
+                id="tag-input"
+                class="text-input"
+                type="text"
+                list="tag-list"
+                autocomplete="off"
+                spellcheck="false"
+                aria-describedby="tag-hint"
+              />
+              <button id="tag-add" class="secondary-button" type="button">Add</button>
+            </div>
+            <div class="select-wrap tag-rank">
+              <select id="tag-rank" name="tagRank" aria-labelledby="tag-rank-label"></select>
+            </div>
+            <span id="tag-rank-label" class="visually-hidden">Tag relevance</span>
+          </div>
+          <datalist id="tag-list"></datalist>
+          <div id="tag-chips" class="chip-options"></div>
+          <p id="tag-hint" class="field-hint"></p>
+        </fieldset>
+
         <fieldset class="format-field">
           <legend id="formats-label">Formats</legend>
           <div id="format-options" class="format-options"></div>
+          <label class="check-option">
+            <input id="first-seasons" type="checkbox" name="firstSeasons" aria-describedby="first-seasons-hint" />
+            <span id="first-seasons-label">First seasons only</span>
+          </label>
+          <p id="first-seasons-hint" class="field-hint"></p>
+        </fieldset>
+
+        <fieldset class="chip-field user-field">
+          <legend id="user-label">Your AniList list</legend>
+          <div class="user-controls">
+            <label id="user-name-label" class="visually-hidden" for="user-name">AniList username</label>
+            <input
+              id="user-name"
+              class="text-input"
+              type="text"
+              autocomplete="username"
+              spellcheck="false"
+              maxlength="40"
+            />
+            <button id="user-load" class="secondary-button" type="button">Load list</button>
+            <button id="user-forget" class="link-button" type="button" hidden>Forget</button>
+            <label id="hide-mode-label" class="visually-hidden" for="hide-mode">Titles on your list</label>
+            <div class="select-wrap hide-mode">
+              <select id="hide-mode"></select>
+            </div>
+          </div>
+          <p id="user-status" class="field-hint" role="status" aria-live="polite"></p>
         </fieldset>
 
         <div class="form-actions">

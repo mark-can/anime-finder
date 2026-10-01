@@ -31,7 +31,14 @@ export const COPY = {
       language: "Language",
       theme: "Accent colour",
       year: "Year",
-      genre: "Genre",
+      genre: "Genres",
+      season: "Season",
+      country: "Country",
+      tags: "Tags",
+      tagRank: "Tag relevance",
+      user: "Your AniList list",
+      userName: "AniList username",
+      hideMode: "Titles on your list",
       minRatings: "Minimum ratings",
       status: "Airing status",
       sort: "Sort by",
@@ -53,12 +60,57 @@ export const COPY = {
     statuses: { any: "Any", finished: "Fully aired", ongoing: "Still airing" },
     sorts: { score: "Score", bayes: "Weighted score", votes: "Number of ratings" },
     formats: { TV: "TV", TV_SHORT: "Shorts", MOVIE: "Movies", ONA: "ONA", OVA: "OVA", SPECIAL: "Specials" },
+    seasons: { "": "Whole year", WINTER: "Winter (Jan–Mar)", SPRING: "Spring (Apr–Jun)", SUMMER: "Summer (Jul–Sep)", FALL: "Fall (Oct–Dec)" },
+    seasonShort: { WINTER: "Winter", SPRING: "Spring", SUMMER: "Summer", FALL: "Fall" },
+    countries: { "": "Any country", JP: "Japan", CN: "China", KR: "South Korea", TW: "Taiwan" },
+    tagRanks: { 0: "Any relevance", 40: "40%+ relevant", 60: "60%+ relevant", 80: "80%+ relevant" },
+    hideModes: { none: "Show everything", seen: "Hide completed & dropped", all: "Hide everything on my list" },
+    listStatuses: { CURRENT: "watching", PLANNING: "planned", COMPLETED: "completed", DROPPED: "dropped", PAUSED: "paused", REPEATING: "rewatching" },
+    genreStates: { off: "not used", include: "required", exclude: "excluded" },
+    genreHint: "Select a genre once to require it, twice to exclude it, a third time to clear it.",
+    tagHint: "Tags are AND-ed: a title must carry every required tag.",
+    tagPlaceholder: "Add a tag, e.g. Isekai",
+    addTag: "Add",
+    removeTag: (name) => `Remove ${name}`,
+    toggleTag: (name, excluded) => (excluded ? `${name}: excluded, select to require` : `${name}: required, select to exclude`),
+    tagsLoading: "Loading AniList tags…",
+    tagsUnavailable: "Could not load AniList tags. Genres still work.",
+    unknownTag: (name) => `AniList has no tag called “${name}”.`,
+    tooMany: "Up to 10 can be selected.",
+    firstSeasons: "First seasons only",
+    firstSeasonsHint: "Hide sequels whose prequel is a TV or web series.",
+    userPlaceholder: "AniList username",
+    loadList: "Load list",
+    forgetList: "Forget",
+    listLoading: (name) => `Loading ${name}’s list…`,
+    listLoaded: (name, count) => `${name}’s list: ${formatNumber(count, "en")} title${count === 1 ? "" : "s"}.`,
+    listErrors: {
+      userNotFound: "No AniList user with that name.",
+      userPrivate: "That AniList profile is private, so its list cannot be read.",
+      generic: "Could not load the AniList list. Try again.",
+    },
+    yourScore: "you",
+    details: "Details",
+    watch: "Watch",
+    trailer: "Watch trailer",
+    noDescription: "No description on AniList.",
+    nextEpisode: (episode, when) => `ep ${episode} ${when}`,
+    loadingDetails: ({ done, total }) => `Loading studios, rankings and streaming links… ${done}/${total}`,
+    detailsFailed: "Results are shown, but studio, streaming and sequel data could not be loaded.",
+    sequelsUnknown: "Sequel data could not be loaded, so “First seasons only” was not applied.",
+    hiddenByList: (count) => `${formatNumber(count, "en")} hidden from your list`,
+    hiddenSequels: (count) => `${formatNumber(count, "en")} sequel${count === 1 ? "" : "s"} hidden`,
+    ranking: (ranking) => {
+      const season = ranking.season ? `${COPY.en.seasonShort[ranking.season]} ` : "";
+      if (ranking.allTime) return `#${ranking.rank} rated all time`;
+      return `#${ranking.rank} rated ${season}${ranking.year}`;
+    },
     show: "Show results",
     loadingButton: "Loading…",
-    idle: "Pick a year and a genre, then select Show results.",
+    idle: "Pick a year and genres, then select Show results.",
     filtersChanged: "Filters changed. Select Show results to refresh the list.",
-    loading: ({ found, page, pass, totalPasses }) =>
-      `Querying AniList… ${found} found · page ${page} · pass ${pass}/${totalPasses}`,
+    loading: ({ found, page, lastPage, pass, totalPasses }) =>
+      `Querying AniList… ${found} found · pages ${page}–${lastPage ?? page} · pass ${pass}/${totalPasses}`,
     waiting: (seconds) => `AniList asked us to slow down. Retrying in ${seconds}s…`,
     noFormats: "Pick at least one format.",
     empty: "Nothing matched. Lower the ratings threshold or add more formats.",
@@ -73,7 +125,7 @@ export const COPY = {
     badges: { releasing: "airing", hiatus: "on hiatus", cancelled: "unfinished", carry: (year) => `since ${year}` },
     episode: { one: "ep", many: "eps", finished: "all aired", announced: "announced", tba: "episode count TBA", cancelled: "released before cancellation" },
     metric: { score: "score", weighted: "weighted", ratings: "ratings" },
-    resultsFor: (genre, year) => `${genre}, ${year}`,
+    resultsFor: (genre, period) => `${genre}, ${period}`,
     mal: "Open on MyAnimeList",
     anilist: "Open on AniList",
     footerBefore: "Data from ",
@@ -92,7 +144,14 @@ export const COPY = {
       language: "Язык",
       theme: "Цвет акцента",
       year: "Год",
-      genre: "Жанр",
+      genre: "Жанры",
+      season: "Сезон",
+      country: "Страна",
+      tags: "Теги",
+      tagRank: "Релевантность тегов",
+      user: "Твой список AniList",
+      userName: "Ник на AniList",
+      hideMode: "Тайтлы из твоего списка",
       minRatings: "Минимум оценок",
       status: "Статус показа",
       sort: "Сортировка",
@@ -114,12 +173,57 @@ export const COPY = {
     statuses: { any: "Любой", finished: "Все серии вышли", ongoing: "Ещё выходит" },
     sorts: { score: "По оценке", bayes: "Взвешенная оценка", votes: "По числу оценок" },
     formats: { TV: "ТВ", TV_SHORT: "Короткие", MOVIE: "Фильмы", ONA: "ONA", OVA: "OVA", SPECIAL: "Спецвыпуски" },
+    seasons: { "": "Весь год", WINTER: "Зима (янв–мар)", SPRING: "Весна (апр–июн)", SUMMER: "Лето (июл–сен)", FALL: "Осень (окт–дек)" },
+    seasonShort: { WINTER: "зима", SPRING: "весна", SUMMER: "лето", FALL: "осень" },
+    countries: { "": "Любая страна", JP: "Япония", CN: "Китай", KR: "Южная Корея", TW: "Тайвань" },
+    tagRanks: { 0: "Любая релевантность", 40: "Релевантность 40%+", 60: "Релевантность 60%+", 80: "Релевантность 80%+" },
+    hideModes: { none: "Показывать всё", seen: "Скрыть просмотренное и брошенное", all: "Скрыть всё из моего списка" },
+    listStatuses: { CURRENT: "смотрю", PLANNING: "в планах", COMPLETED: "просмотрено", DROPPED: "брошено", PAUSED: "отложено", REPEATING: "пересматриваю" },
+    genreStates: { off: "не учитывается", include: "обязателен", exclude: "исключён" },
+    genreHint: "Нажми на жанр один раз, чтобы он был обязательным, второй — чтобы исключить, третий — чтобы сбросить.",
+    tagHint: "Теги складываются через «И»: у тайтла должны быть все выбранные теги.",
+    tagPlaceholder: "Добавь тег, например Isekai",
+    addTag: "Добавить",
+    removeTag: (name) => `Убрать ${name}`,
+    toggleTag: (name, excluded) => (excluded ? `${name}: исключён, нажми, чтобы сделать обязательным` : `${name}: обязателен, нажми, чтобы исключить`),
+    tagsLoading: "Загружаю теги AniList…",
+    tagsUnavailable: "Не удалось загрузить теги AniList. Жанры работают.",
+    unknownTag: (name) => `На AniList нет тега «${name}».`,
+    tooMany: "Можно выбрать не больше 10.",
+    firstSeasons: "Только первые сезоны",
+    firstSeasonsHint: "Скрыть продолжения, у которых приквел — ТВ- или веб-сериал.",
+    userPlaceholder: "Ник на AniList",
+    loadList: "Загрузить список",
+    forgetList: "Забыть",
+    listLoading: (name) => `Загружаю список ${name}…`,
+    listLoaded: (name, count) => `Список ${name}: ${formatNumber(count, "ru")} ${ruPlural(count, { one: "тайтл", few: "тайтла", many: "тайтлов" })}.`,
+    listErrors: {
+      userNotFound: "На AniList нет пользователя с таким ником.",
+      userPrivate: "Профиль на AniList закрыт, список прочитать нельзя.",
+      generic: "Не удалось загрузить список AniList. Попробуй ещё раз.",
+    },
+    yourScore: "ты",
+    details: "Подробнее",
+    watch: "Смотреть",
+    trailer: "Трейлер",
+    noDescription: "На AniList нет описания.",
+    nextEpisode: (episode, when) => `эп. ${episode} ${when}`,
+    loadingDetails: ({ done, total }) => `Загружаю студии, рейтинги и ссылки на стриминг… ${done}/${total}`,
+    detailsFailed: "Результаты показаны, но данные о студиях, стриминге и продолжениях загрузить не удалось.",
+    sequelsUnknown: "Данные о продолжениях не загрузились, поэтому фильтр «Только первые сезоны» не применён.",
+    hiddenByList: (count) => `${formatNumber(count, "ru")} скрыто по твоему списку`,
+    hiddenSequels: (count) => `${formatNumber(count, "ru")} ${ruPlural(count, { one: "продолжение скрыто", few: "продолжения скрыто", many: "продолжений скрыто" })}`,
+    ranking: (ranking) => {
+      if (ranking.allTime) return `#${ranking.rank} по оценке за всё время`;
+      const season = ranking.season ? `${COPY.ru.seasonShort[ranking.season]} ` : "";
+      return `#${ranking.rank} по оценке, ${season}${ranking.year}`;
+    },
     show: "Показать",
     loadingButton: "Загрузка…",
-    idle: "Выбери год и жанр, затем нажми «Показать».",
+    idle: "Выбери год и жанры, затем нажми «Показать».",
     filtersChanged: "Фильтры изменены. Нажми «Показать», чтобы обновить список.",
-    loading: ({ found, page, pass, totalPasses }) =>
-      `Запрашиваю AniList… найдено ${found} · страница ${page} · проход ${pass}/${totalPasses}`,
+    loading: ({ found, page, lastPage, pass, totalPasses }) =>
+      `Запрашиваю AniList… найдено ${found} · страницы ${page}–${lastPage ?? page} · проход ${pass}/${totalPasses}`,
     waiting: (seconds) => `AniList просит снизить частоту запросов. Повтор через ${seconds} с…`,
     noFormats: "Выбери хотя бы один формат.",
     empty: "Ничего не нашлось. Понизь порог оценок или добавь форматы.",
@@ -134,7 +238,7 @@ export const COPY = {
     badges: { releasing: "идёт", hiatus: "перерыв", cancelled: "не закончено", carry: (year) => `с ${year}` },
     episode: { one: "эп.", many: "эп.", finished: "все вышли", announced: "заявлено", tba: "число серий не объявлено", cancelled: "вышло до отмены" },
     metric: { score: "оценка", weighted: "взвешенная", ratings: "оценок" },
-    resultsFor: (genre, year) => `${genre}, ${year}`,
+    resultsFor: (genre, period) => `${genre}, ${period}`,
     mal: "Открыть на MyAnimeList",
     anilist: "Открыть на AniList",
     footerBefore: "Данные — ",
@@ -221,4 +325,31 @@ export function dateRangeText(media, language) {
   if (!media.end) return start;
   const end = `${t.months[media.end.month - 1]} ${media.end.year}`;
   return start === end ? start : `${start} — ${end}`;
+}
+
+export function periodText(year, season, language) {
+  if (!season) return String(year);
+  const name = COPY[language].seasonShort[season];
+  return `${name} ${year}`;
+}
+
+export function genreListText(genres, language) {
+  if (genres.length === 0) return COPY[language].allGenres;
+  return genres.map((genre) => genreName(genre, language)).join(" + ");
+}
+
+// "in 2 days", "через 5 часов": the next episode is always in the future, but a
+// stale cache can make it slightly past, which reads as "now".
+export function relativeTime(timestamp, language, now = Date.now()) {
+  const seconds = Math.round((timestamp - now) / 1_000);
+  const format = new Intl.RelativeTimeFormat(COPY[language].locale, { numeric: "auto" });
+  const units = [
+    ["day", 86_400],
+    ["hour", 3_600],
+    ["minute", 60],
+  ];
+  for (const [unit, size] of units) {
+    if (Math.abs(seconds) >= size) return format.format(Math.round(seconds / size), unit);
+  }
+  return format.format(0, "minute");
 }
