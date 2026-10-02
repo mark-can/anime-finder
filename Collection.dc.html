@@ -57,13 +57,13 @@ a{color:#FFFFFF}a:hover{color:#FFE27A}
 <section aria-label="Тройка лучших" style="display: grid; grid-template-columns: 400px minmax(0, 1fr); gap: 20px; align-items: center; height: 560px">
 <div style="display: flex; flex-direction: column; gap: 18px">
 <h1 style="margin: 0; font-weight: 900; font-size: 96px; line-height: 0.95; letter-spacing: -2px">2024</h1>
-<p style="margin: 0; font-weight: 700; font-size: 19px; line-height: 1.45">148 тайтлов года — 148 карт. Чем выше оценка на AniList, тем больше звёзд у карты.</p>
+<p style="margin: 0; font-weight: 700; font-size: 19px; line-height: 1.45">148 тайтлов года — 148 карт. Чем выше оценка на AniList, тем реже карта.</p>
 <div aria-hidden="true" style="display: flex; height: 14px; border-radius: 7px; overflow: hidden; gap: 2px">
 <sc-for list="{{tiers}}" as="t" hint-placeholder-count="6"><span style="{{t.bar}}"></span></sc-for>
 </div>
 <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 7px">
 <sc-for list="{{tiers}}" as="t" hint-placeholder-count="6">
-<li style="display: grid; grid-template-columns: 116px minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+<li style="display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
 <span style="{{t.chip}}">{{t.stars}}</span>
 <span>{{t.range}}</span>
 <span style="color: #CFC6FF">{{t.count}}</span>
@@ -96,9 +96,9 @@ a{color:#FFFFFF}a:hover{color:#FFE27A}
 </div>
 </section>
 
-<section aria-label="Остальные шестизвёздочные карты" style="display: flex; flex-direction: column; gap: 16px">
+<section aria-label="Остальные карты UR" style="display: flex; flex-direction: column; gap: 16px">
 <div style="display: flex; justify-content: space-between; align-items: baseline">
-<h2 style="margin: 0; font-weight: 900; font-size: 28px">Ещё пять карт на ★★★★★★</h2>
+<h2 style="margin: 0; font-weight: 900; font-size: 28px">Ещё пять карт UR</h2>
 <span style="font-size: 15px; color: #CFC6FF; font-weight: 700">места 4–8</span>
 </div>
 <div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px">
@@ -120,7 +120,7 @@ a{color:#FFFFFF}a:hover{color:#FFE27A}
 </div>
 </section>
 
-<section aria-label="Карты по числу звёзд" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px">
+<section aria-label="Карты по редкости" style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 18px">
 <sc-for list="{{shelves}}" as="s" hint-placeholder-count="5">
 <div style="display: flex; flex-direction: column; gap: 12px; padding: 16px; border-radius: 18px; background: #2A1D6E">
 <div style="display: flex; justify-content: space-between; align-items: center; gap: 8px">
@@ -153,12 +153,12 @@ a{color:#FFFFFF}a:hover{color:#FFE27A}
 class Component extends DCLogic {
 renderVals() {
 var TIERS = [
-{ n: 6, min: 8.5, range: "от 8.5", count: 8, foil: "conic-gradient(from 210deg, #FFE27A, #FF9BD9, #8FE4FF, #B8FF9F, #FFE27A)", ink: "#2A1D6E" },
-{ n: 5, min: 8.0, range: "8.0–8.4", count: 15, foil: "linear-gradient(135deg, #FFF0A8, #F2B33D)", ink: "#2A1D6E" },
-{ n: 4, min: 7.5, range: "7.5–7.9", count: 27, foil: "linear-gradient(135deg, #FFB8EE, #D05CFF)", ink: "#2A1D6E" },
-{ n: 3, min: 7.0, range: "7.0–7.4", count: 47, foil: "linear-gradient(135deg, #A8E6FF, #3D8BFF)", ink: "#0F1E52" },
-{ n: 2, min: 6.0, range: "6.0–6.9", count: 40, foil: "linear-gradient(135deg, #C6F5A8, #45B36B)", ink: "#0F3320" },
-{ n: 1, min: 0, range: "ниже 6.0", count: 11, foil: "linear-gradient(135deg, #E4E4EE, #9A9AB0)", ink: "#26263A" }
+{ n: 6, label: "UR", min: 8.5, range: "от 8.5", count: 8, foil: "conic-gradient(from 210deg, #FFE27A, #FF9BD9, #8FE4FF, #B8FF9F, #FFE27A)", ink: "#2A1D6E" },
+{ n: 5, label: "SSR", min: 8.0, range: "8.0–8.4", count: 15, foil: "linear-gradient(135deg, #FFF0A8, #F2B33D)", ink: "#2A1D6E" },
+{ n: 4, label: "SR", min: 7.5, range: "7.5–7.9", count: 27, foil: "linear-gradient(135deg, #FFB8EE, #D05CFF)", ink: "#2A1D6E" },
+{ n: 3, label: "R", min: 7.0, range: "7.0–7.4", count: 47, foil: "linear-gradient(135deg, #A8E6FF, #3D8BFF)", ink: "#0F1E52" },
+{ n: 2, label: "N", min: 6.0, range: "6.0–6.9", count: 40, foil: "linear-gradient(135deg, #C6F5A8, #45B36B)", ink: "#0F3320" },
+{ n: 1, label: "C", min: 0, range: "ниже 6.0", count: 11, foil: "linear-gradient(135deg, #E4E4EE, #9A9AB0)", ink: "#26263A" }
 ];
 var TOTAL = 148;
 function tierOf(score) {
@@ -172,11 +172,11 @@ for (var i = 0; i < n; i++) out += "★";
 return out;
 }
 function chip(t, size) {
-return "display: inline-flex; justify-content: center; padding: " + (size === "s" ? "3px 8px" : "4px 10px") + "; border-radius: 9px; font-weight: 900; font-size: " + (size === "s" ? "13px" : "14px") + "; letter-spacing: 1px; color: " + t.ink + "; background: " + t.foil;
+return "display: inline-flex; justify-content: center; padding: " + (size === "s" ? "3px 8px" : "4px 10px") + "; border-radius: 9px; font-weight: 900; font-size: " + (size === "s" ? "14px" : "16px") + "; letter-spacing: 0.5px; color: " + t.ink + "; background: " + t.foil;
 }
 var tiers = TIERS.map(function (t) {
 return {
-stars: starText(t.n),
+stars: t.label,
 range: t.range,
 count: t.count + " карт",
 chip: chip(t),
@@ -185,7 +185,7 @@ bar: "flex-grow: " + t.count + "; background: " + t.foil
 });
 function card(d) {
 var t = tierOf(d[3]);
-return { rank: d[0], title: d[1], img: d[2], score: d[3], eps: d[4], pop: d[5], studio: d[6], owned: d[7], tier: t, stars: starText(t.n) };
+return { rank: d[0], title: d[1], img: d[2], score: d[3], eps: d[4], pop: d[5], studio: d[6], owned: d[7], tier: t, stars: t.label };
 }
 var top = [
 [1, "Frieren: Beyond Journey’s End", "/_blob/88e590affc964db52f527ddeaccbd727", "9.1", "28", "485K", "MADHOUSE", "в планах"],
@@ -200,7 +200,7 @@ var heroPos = [
 var hero = top.map(function (d, i) {
 var c = card(d), p = heroPos[i];
 c.frame = "position: absolute; left: " + p.left + "px; top: " + p.top + "px; width: " + p.w + "px; height: " + p.h + "px; padding: 7px; box-sizing: border-box; border-radius: 20px; background: " + c.tier.foil + "; transform: rotate(" + p.rot + "deg); z-index: " + p.z + "; box-shadow: 0 24px 50px rgba(20, 10, 70, 0.5)";
-c.badge = "position: absolute; left: 12px; top: 12px; padding: 4px 10px; border-radius: 10px; font-weight: 900; font-size: 15px; letter-spacing: 1px; color: " + c.tier.ink + "; background: " + c.tier.foil;
+c.badge = "position: absolute; left: 12px; top: 12px; padding: 4px 10px; border-radius: 10px; font-weight: 900; font-size: 20px; letter-spacing: 0.5px; color: " + c.tier.ink + "; background: " + c.tier.foil;
 return c;
 });
 var six = [
@@ -224,7 +224,7 @@ var shelfData = [
 var shelves = shelfData.map(function (s) {
 var t = TIERS[6 - s[0]];
 return {
-stars: starText(t.n),
+stars: t.label,
 range: t.range,
 chip: chip(t, "s"),
 more: "Ещё " + s[1],
