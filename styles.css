@@ -1154,7 +1154,8 @@ abbr.rarity-badge {
 .card-stat strong {
   display: block;
   overflow: hidden;
-  font-size: 19px;
+  font-size: 17px;
+  letter-spacing: -0.01em;
   text-overflow: ellipsis;
   white-space: nowrap;
   font-weight: 900;
