@@ -22,7 +22,7 @@ const SEARCH_FIELDS = `
   startDate{ year month day }
   endDate{ year month day }
   genres
-  coverImage{ large medium color }
+  coverImage{ extraLarge large medium color }
   stats{ scoreDistribution{ amount } }`;
 
 const DETAIL_FIELDS = `

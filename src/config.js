@@ -60,26 +60,13 @@ export const SEEN_STATUSES = ["COMPLETED", "REPEATING", "DROPPED"];
 // 0 means "no limit": every matching title is listed.
 export const LIMIT_OPTIONS = [0, 10, 25, 50, 100];
 
-export const THEMES = ["ink", "teal", "forest", "plum", "rust", "graphite"];
-export const DEFAULT_THEME = "ink";
-export const THEME_STORAGE_KEY = "anime-finder:theme";
 export const USER_STORAGE_KEY = "anime-finder:user";
 export const CACHE_STORAGE_PREFIX = "anime-finder:cache:";
-
-// Browser colour for the address bar, kept in sync with the active accent.
-export const THEME_COLORS = Object.freeze({
-  ink: "#2e4260",
-  teal: "#0f5f6b",
-  forest: "#24603f",
-  plum: "#5c3566",
-  rust: "#8f3f1f",
-  graphite: "#3b4147",
-});
 
 export const DEFAULT_FILTERS = Object.freeze({
   year: MAX_YEAR,
   season: "",
-  genres: ["Action"],
+  genres: [],
   excludedGenres: [],
   tags: [],
   excludedTags: [],

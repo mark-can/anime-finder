@@ -12,6 +12,9 @@ import {
   overlapsYear,
   periodFor,
   pickRankings,
+  rarityCounts,
+  rarityOf,
+  sectionsFor,
   rankMedia,
   scoreTier,
   timelineFor,
@@ -151,6 +154,7 @@ test("normalizeMedia prefers the large cover and falls back to the native title"
   );
 
   assert.equal(media.cover, "https://example.com/large.jpg");
+  assert.equal(media.coverLarge, "https://example.com/large.jpg");
   assert.equal(media.title, "葬送のフリーレン");
   assert.equal(media.color, "#e4a15d");
 });
@@ -282,4 +286,37 @@ test("deriveView hides sequels and listed titles, then ranks and trims", () => {
   assert.deepEqual(view.visible.map((media) => media.id), [1]);
   assert.equal(view.hiddenSequels, 1);
   assert.equal(view.hiddenByList, 1);
+});
+
+test("rarity follows the six score steps from UR down to C", () => {
+  assert.equal(rarityOf(9.1), "ur");
+  assert.equal(rarityOf(8.5), "ur");
+  assert.equal(rarityOf(8.4), "ssr");
+  assert.equal(rarityOf(7.9), "sr");
+  assert.equal(rarityOf(7), "r");
+  assert.equal(rarityOf(6.9), "n");
+  assert.equal(rarityOf(5.4), "c");
+  assert.equal(rarityOf(0), "none");
+});
+
+test("rarityCounts tallies every rarity, including empty ones", () => {
+  const counts = rarityCounts([{ score: 9 }, { score: 8.6 }, { score: 7.2 }, { score: 4.9 }]);
+  assert.deepEqual(counts, { ur: 2, ssr: 0, sr: 0, r: 1, n: 0, c: 1 });
+});
+
+test("sectionsFor puts the top three on the podium and groups the rest by rarity", () => {
+  const items = [9.1, 8.8, 8.7, 8.6, 8.4, 8.3, 7.9, 5.4].map((score, index) => ({ id: index + 1, score }));
+  const byScore = sectionsFor(items, "score");
+
+  assert.deepEqual(byScore.podium.map((item) => item.id), [1, 2, 3]);
+  assert.deepEqual(byScore.sections.map((section) => [section.rarity, section.items.length]), [
+    ["ur", 1],
+    ["ssr", 2],
+    ["sr", 1],
+    ["c", 1],
+  ]);
+
+  const byVotes = sectionsFor(items, "votes");
+  assert.deepEqual(byVotes.sections.map((section) => [section.rarity, section.items.length]), [[null, 5]]);
+  assert.deepEqual(sectionsFor(items.slice(0, 2), "score").sections, []);
 });
