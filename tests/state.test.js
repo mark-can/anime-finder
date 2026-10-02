@@ -28,7 +28,6 @@ test("parseUrlState validates values and preserves an explicit empty genre list"
   assert.equal(state.filters.sort, "votes");
   assert.equal(state.filters.limit, 10);
   assert.deepEqual(state.filters.formats, ["TV", "OVA"]);
-  assert.equal(state.shouldAutoSearch, true);
 });
 
 test("links from before multi-genre support still open the right genre", () => {
@@ -80,7 +79,6 @@ test("the default view asks for every genre, 5,000+ ratings, TV only, and an unl
   assert.deepEqual(state.filters.formats, ["TV"]);
   assert.deepEqual(state.filters.genres, []);
   assert.equal(state.filters.firstSeasons, false);
-  assert.equal(state.shouldAutoSearch, false);
 });
 
 test("share URLs round-trip the selected filters", () => {

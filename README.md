@@ -1,114 +1,118 @@
 # Anime by Year
 
-Find the highest-rated anime of any year using public data from the [AniList API](https://docs.anilist.co/).
+The best anime of any year as a card collection, built on public data from the
+[AniList API](https://docs.anilist.co/). Every title is a card, and its rarity comes from its AniList score.
 
 Live site: <https://mark-can.github.io/anime-finder/>
 
-## Features
+## What it does
 
-- Filter by year and season, by several genres at once (required or excluded), by AniList tags
-  (required or excluded, with a minimum tag relevance), by country of origin, airing status,
-  minimum number of ratings, and format.
-- “First seasons only” hides sequels using AniList's relation data.
-- Enter an AniList username to hide titles already on that list (finished and dropped, or everything)
-  and to see each title's list status and your own score. Only public lists can be read; no login is
-  needed.
-- Cards show the main studio, AniList's own ranking badges, the next episode of airing series, where to
-  watch (official streaming links), and an expandable panel with the synopsis, banner and trailer.
-- Rank by AniList score, weighted score, or number of ratings.
-- List every match by default, or trim the list to the top 10, 25, 50, or 100.
-- Every title is a collectible card. Its rarity comes from the AniList score in six steps:
-  UR (8.5 and up), SSR (8.0–8.4), SR (7.5–7.9), R (7.0–7.4), N (6.0–6.9) and C (below 6.0).
-  A legend and a bar show how many cards of each rarity the current search holds.
-- The top three cards stand on a podium; when sorted by score, the rest of the collection is grouped by
-  rarity, and long groups open in steps of 12. Selecting a card opens its details: banner, synopsis,
-  trailer, AniList rankings, studio, airing dates, streaming links, and links to AniList and MyAnimeList.
-- Filters apply as you change them; no "show" button. Year and season sit at the top, genres as chips,
-  and everything else (tags, formats, sequels, country, ratings threshold, airing status, sort order,
-  list length, your AniList list) in a filter panel, with active ones summarised next to it.
-- Include series that started in an earlier year but continued airing in the selected year.
+### The collection
+
+- **Rarity from the score.** Every title in the search becomes a card in one of six rarities:
+
+  | Rarity | Name | AniList score |
+  |---|---|---|
+  | UR | Ultra Rare | 8.5 and up |
+  | SSR | Super Super Rare | 8.0–8.4 |
+  | SR | Super Rare | 7.5–7.9 |
+  | R | Rare | 7.0–7.4 |
+  | N | Normal | 6.0–6.9 |
+  | C | Common | below 6.0 |
+
+- **Summary.** A legend and a bar show how many cards of each rarity the current search holds.
+- **Podium and sections.** The top three cards stand on a podium. When sorting by score, the rest are grouped by rarity, and long groups open 12 cards at a time.
+- **Card details.** Selecting a card opens:
+  - banner, synopsis and trailer;
+  - AniList rankings, studio and next episode;
+  - airing dates on a timeline of the selected year;
+  - official streaming links and links to AniList and MyAnimeList.
+
+### Filters
+
+Filters apply as soon as they change; there is no "show" button.
+
+- **Year and season.** A year stepper, plus season tabs (calendar quarters). A year or season also includes series that started earlier and were still airing.
+- **Genres.** Chips: select once to require a genre, twice to exclude it, a third time to clear it.
+- **Filter panel**, with active filters summarised next to its button:
+  - tags (required or excluded, with a minimum relevance) and formats;
+  - "first seasons only", country of origin and minimum number of ratings;
+  - airing status;
+  - sort order: score, weighted score or number of ratings;
+  - list length: every match, or the top 10, 25, 50 or 100.
+
+### Your AniList list
+
+- Enter an AniList username to see the collection against your own list. The header shows how many cards you have collected, cards carry your list status and score, and "hide collected" removes finished titles.
+- Only public lists can be read, and no login or API key is needed.
+- The username stays in this browser's `localStorage` and is never put in shared URLs.
+
+### Everything else
+
 - English and Russian interface.
-- Shareable URLs that preserve all filters.
-- Works from phones (scrolling season, genre and podium rows; two-column card grid) to wide screens.
-- Accessible labels, keyboard focus, live loading messages, and language state.
-- Request cancellation, timeout handling, AniList rate-limit awareness, and a bounded cache that survives
-  reloads (localStorage), so reopening a recent search or shared link costs no API requests.
-
-No API key or authentication is required because the app only reads public AniList data.
+- Shareable URLs that keep every filter.
+- Works on phones and wide screens.
+- Keyboard accessible, with live status messages.
 
 ## Project structure
 
 ```text
-index.html             Semantic page structure and metadata
-styles.css             Design system and responsive layouts
-src/anilist.js         AniList GraphQL client, batched pagination, details, tags, user lists, rate limiting
+index.html             Page structure, filter panel and card dialog
+styles.css             Visual design, rarity frames and responsive layout
+site.webmanifest       Web app manifest
+assets/favicon.svg     Icon
+src/app.js             UI: rendering, events, filter panel, card dialog, auto-search
+src/anilist.js         AniList GraphQL client: batched search, details, genres and tags, user lists, rate limits
 src/cache.js           Expiring LRU cache mirrored to localStorage
-src/app.js             UI state, events, and rendering
-src/config.js          Shared constants and filter options
-src/domain.js          Pure normalization, filtering, ranking, and timeline logic
+src/config.js          Constants, filter options and defaults
+src/domain.js          Pure logic: normalization, filtering, ranking, rarity, sections, timeline
 src/i18n.js            English and Russian copy and formatting
-src/state.js           URL parsing and shareable filter state
-tests/                 Unit tests for domain and URL logic
-.github/workflows/     Automated checks
+src/state.js           Shareable URL state and "does this change need a new search"
+tests/                 Unit tests (node --test) for the client, cache, domain logic and URL state
+.github/workflows/     Runs the checks on every push and pull request
 ```
+
+The app has no runtime dependencies and no build step.
 
 ## Run locally
 
-The production app has no runtime dependencies and no build step. Serve the repository directory with any local static server, for example:
+Serve the repository directory with any static server, for example:
 
 ```bash
 python3 -m http.server 4173
 ```
 
-Then open <http://localhost:4173>.
+Then open <http://localhost:4173>. Opening `index.html` as a `file://` URL does not work, because browsers block JavaScript module imports from local files.
 
-Opening `index.html` directly as a `file://` URL will not work reliably because browsers restrict JavaScript module imports from local files.
+## Check changes
 
-## Verify changes
-
-Node.js 20 or newer is required for the checks:
+Node.js 20 or newer is needed; there is nothing to install.
 
 ```bash
 npm run verify
 ```
 
-No `npm install` step is required.
+This runs a syntax check on every source file and the unit tests. GitHub Actions runs the same command on every push and pull request.
 
-## Deploy to GitHub Pages
+## Deploy
 
-The site is designed to be served directly from the repository root:
+GitHub Pages serves the `main` branch from the repository root (**Settings → Pages → Deploy from a branch → `main`, `/ (root)`**). Every commit to `main` updates the live site within a minute or two.
 
-1. Open **Settings → Pages** in the GitHub repository.
-2. Under **Build and deployment**, choose **Deploy from a branch**.
-3. Select the `main` branch and the `/ (root)` folder.
-4. Save the setting.
+## Branches
 
-Every new commit to `main` will then update the live site after GitHub Pages finishes deploying it.
+- `main` is the live site.
+- `tmp-design-preview` is an archive of the redesign directions that were explored but not built (magazine, poster wall, broadcast grid). Each one is a standalone page; its README links to previews. It is never deployed.
 
 ## Data notes
 
-- Scores are AniList average scores rescaled from 100 to 10.
-- “Ratings” is calculated from AniList's score distribution and represents users who submitted a score.
-- A title can only be scored by users who have it on their list, so its rating count never exceeds its
-  popularity. The client passes the ratings threshold to AniList as a `popularity_greater` filter, which
-  prunes most pages server-side without dropping a single match.
-- Score colours are a redundant cue: the number itself is always shown, so the list stays readable
-  without relying on colour.
-- AniList may temporarily lower its API rate limit. The client reads the response headers, waits between requests, retries one rate-limited request, and reports incomplete searches when the safety pagination limit is reached.
-- Search pages are requested four at a time through GraphQL aliases. AniList's limit counts requests, not
-  pages, so a long search needs a quarter of the requests it used to. If AniList ever rejects a batch as
-  too complex, the client halves the batch size and carries on.
-- Studios, rankings, streaming links, synopsis, trailer and relations come from a second query by id
-  (150 titles per request) once the matches are known. If it fails, the list is still shown.
-- Because the full list is loaded up front, the result limit, the sort order, “First seasons only” and
-  the AniList-list filter are applied locally: changing them re-renders the list without another API
-  request. The one exception is a list that was cut short by the safety limit, where switching between
-  sorting by score and by number of ratings changes which titles AniList returns first.
-- A title is treated as a sequel when its AniList prequel is a series or a film (or a work of its own
-  format). Prequel OVAs and specials do not count, so first seasons with a prequel OVA stay listed.
-- Seasons are calendar quarters (Winter = January–March). Like the year filter, a season includes
-  series that started earlier and were still airing in it.
-- Genres and tags are combined with AND, as on AniList: a title must carry every required one.
-- The genre and tag lists come from AniList (`GenreCollection`, `MediaTagCollection`) and are cached for
-  a week; adult genres and tags are never offered.
-- The AniList username is stored only in this browser's localStorage and is never put in shared URLs.
+- **Scores.** Scores are AniList average scores rescaled from 100 to 10. Rarity is a redundant cue: the number is always shown.
+- **Ratings.** "Ratings" is counted from AniList's score distribution: the people who actually submitted a score. A title can only be scored by people who have it on their list, so the client passes the ratings threshold to AniList as `popularity_greater`. That prunes most pages on the server without losing a match.
+- **Rate limits.** AniList counts requests, not pages, and may lower its limit (it was 30 a minute at the time of writing).
+  - Search pages are fetched four at a time through GraphQL aliases. If AniList rejects a batch as too complex, the batch size halves.
+  - The client reads the rate-limit headers, waits between requests, and retries one rate-limited request.
+  - If the safety page limit is reached, the search reports that it is incomplete.
+- **Details query.** Studios, rankings, streaming links, synopsis, trailer and relations come from a second query by id, 150 titles per request. If it fails, the collection is still shown.
+- **Local re-sorting.** The full list loads up front, so the sort order, list length, "first seasons only" and the AniList-list filter re-render it without another request. The exception is a list cut short by the safety limit: there, switching between score and number of ratings changes which titles AniList returns first.
+- **Sequels.** A title counts as a sequel when its prequel is a series or a film, or a work of its own format. Prequel OVAs and specials don't count, so a first season with a prequel OVA stays listed.
+- **Genres and tags.** They combine with AND, as on AniList. Their lists come from AniList (`GenreCollection`, `MediaTagCollection`) and are cached for a week. Adult genres and tags are never offered, and searches always exclude adult titles.
+- **Cache.** Responses are cached in `localStorage` (30 minutes for searches, 10 minutes for user lists), so a recent search or shared link opens without spending API requests.

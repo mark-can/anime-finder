@@ -1,7 +1,7 @@
 {
   "name": "Anime by Year — the best anime of any year",
   "short_name": "Anime by Year",
-  "description": "Find the highest-rated anime of any year using AniList data.",
+  "description": "The best anime of any year as a card collection, ranked by AniList score.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#3b2a8f",

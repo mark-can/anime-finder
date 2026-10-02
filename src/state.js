@@ -13,24 +13,6 @@ import {
   TAG_RANK_OPTIONS,
 } from "./config.js";
 
-const URL_KEYS = [
-  "year",
-  "season",
-  "genre",
-  "genres",
-  "xgenres",
-  "tags",
-  "xtags",
-  "tagrank",
-  "country",
-  "min",
-  "status",
-  "sort",
-  "limit",
-  "formats",
-  "first",
-];
-
 // Filters that only change how an already-loaded list is shown. Everything else
 // changes the AniList query and needs a new search.
 const LOCAL_KEYS = new Set(["limit", "firstSeasons", "sort"]);
@@ -90,7 +72,6 @@ export function parseUrlState(search = window.location.search) {
       formats: params.has("formats") ? formats : [...DEFAULT_FILTERS.formats],
       firstSeasons: params.get("first") === "1",
     },
-    shouldAutoSearch: URL_KEYS.some((key) => params.has(key)),
   };
 }
 

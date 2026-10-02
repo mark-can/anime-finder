@@ -22,14 +22,11 @@ const RU_GENRES = {
 export const COPY = {
   en: {
     locale: "en-US",
-    eyebrow: "AniList archive",
     appTitle: "Anime by Year",
     documentTitle: "Anime by Year — the best anime of any year",
     description: "Find the best anime of any year: filter by genre, format, airing status and number of ratings, then list every match or just the top titles.",
-    tagline: "The highest-rated anime of any year, by genre — including series that started earlier and were still airing.",
     labels: {
       language: "Language",
-      theme: "Accent colour",
       year: "Year",
       genre: "Genres",
       season: "Season",
@@ -44,14 +41,6 @@ export const COPY = {
       sort: "Sort by",
       limit: "Results shown",
       formats: "Formats",
-    },
-    themes: {
-      ink: "Ink",
-      teal: "Teal",
-      forest: "Forest",
-      plum: "Plum",
-      rust: "Rust",
-      graphite: "Graphite",
     },
     allResults: "All matches",
     topN: (count) => `Top ${count}`,
@@ -89,7 +78,6 @@ export const COPY = {
       userPrivate: "That AniList profile is private, so its list cannot be read.",
       generic: "Could not load the AniList list. Try again.",
     },
-    yourScore: "you",
     details: "Details",
     watch: "Watch",
     trailer: "Watch trailer",
@@ -128,17 +116,12 @@ export const COPY = {
     tierSection: (tier) => `${tier} cards`,
     showMore: (count) => `Show ${formatNumber(count, "en")} more`,
     stat: { score: "score", weighted: "weighted", ratings: "ratings", episodes: "episodes", lists: "in lists" },
-    inLists: (value) => `${value} in lists`,
     ratingsShort: (value) => `${value} ratings`,
     collectedRibbon: (score) => (score > 0 ? `collected, you gave ${score}` : "collected"),
     updating: "Updating the collection…",
     openCard: (title) => `${title}: open card`,
     rarityHelp: (label, name, range) => `${label}: ${name}, score ${range}`,
     timelineLabel: (year) => `On air in ${year}`,
-    show: "Show results",
-    loadingButton: "Loading…",
-    idle: "Pick a year and genres, then select Show results.",
-    filtersChanged: "Filters changed. Select Show results to refresh the list.",
     loading: ({ found, page, lastPage, pass, totalPasses }) =>
       `Querying AniList… ${found} found · pages ${page}–${lastPage ?? page} · pass ${pass}/${totalPasses}`,
     waiting: (seconds) => `AniList asked us to slow down. Retrying in ${seconds}s…`,
@@ -154,8 +137,6 @@ export const COPY = {
     },
     badges: { releasing: "airing", hiatus: "on hiatus", cancelled: "unfinished", carry: (year) => `since ${year}` },
     episode: { one: "ep", many: "eps", finished: "all aired", announced: "announced", tba: "episode count TBA", cancelled: "released before cancellation" },
-    metric: { score: "score", weighted: "weighted", ratings: "ratings" },
-    resultsFor: (genre, period) => `${genre}, ${period}`,
     mal: "Open on MyAnimeList",
     anilist: "Open on AniList",
     footerBefore: "Data from ",
@@ -165,14 +146,11 @@ export const COPY = {
   },
   ru: {
     locale: "ru-RU",
-    eyebrow: "Архив AniList",
     appTitle: "Аниме по годам",
     documentTitle: "Аниме по годам — лучшее аниме любого года",
     description: "Лучшее аниме любого года: фильтры по жанру, формату, статусу показа и числу оценок, полный список или только топ.",
-    tagline: "Самое высокооценённое аниме любого года по жанру — включая сериалы, которые начались раньше и продолжали выходить.",
     labels: {
       language: "Язык",
-      theme: "Цвет акцента",
       year: "Год",
       genre: "Жанры",
       season: "Сезон",
@@ -187,14 +165,6 @@ export const COPY = {
       sort: "Сортировка",
       limit: "Сколько показывать",
       formats: "Форматы",
-    },
-    themes: {
-      ink: "Чернила",
-      teal: "Бирюза",
-      forest: "Хвоя",
-      plum: "Слива",
-      rust: "Ржавчина",
-      graphite: "Графит",
     },
     allResults: "Все совпадения",
     topN: (count) => `Топ-${count}`,
@@ -232,7 +202,6 @@ export const COPY = {
       userPrivate: "Профиль на AniList закрыт, список прочитать нельзя.",
       generic: "Не удалось загрузить список AniList. Попробуй ещё раз.",
     },
-    yourScore: "ты",
     details: "Подробнее",
     watch: "Смотреть",
     trailer: "Трейлер",
@@ -271,17 +240,12 @@ export const COPY = {
     tierSection: (tier) => `Карты ${tier}`,
     showMore: (count) => `Показать ещё ${formatNumber(count, "ru")}`,
     stat: { score: "оценка", weighted: "взвешенная", ratings: "оценок", episodes: "серий", lists: "в списках" },
-    inLists: (value) => `${value} в списках`,
     ratingsShort: (value) => `${value} оценок`,
     collectedRibbon: (score) => (score > 0 ? `собрано, твоя оценка ${score}` : "собрано"),
     updating: "Обновляю коллекцию…",
     openCard: (title) => `${title}: открыть карту`,
     rarityHelp: (label, name, range) => `${label}: ${name}, оценка ${range}`,
     timelineLabel: (year) => `В эфире в ${year} году`,
-    show: "Показать",
-    loadingButton: "Загрузка…",
-    idle: "Выбери год и жанры, затем нажми «Показать».",
-    filtersChanged: "Фильтры изменены. Нажми «Показать», чтобы обновить список.",
     loading: ({ found, page, lastPage, pass, totalPasses }) =>
       `Запрашиваю AniList… найдено ${found} · страницы ${page}–${lastPage ?? page} · проход ${pass}/${totalPasses}`,
     waiting: (seconds) => `AniList просит снизить частоту запросов. Повтор через ${seconds} с…`,
@@ -297,8 +261,6 @@ export const COPY = {
     },
     badges: { releasing: "идёт", hiatus: "перерыв", cancelled: "не закончено", carry: (year) => `с ${year}` },
     episode: { one: "эп.", many: "эп.", finished: "все вышли", announced: "заявлено", tba: "число серий не объявлено", cancelled: "вышло до отмены" },
-    metric: { score: "оценка", weighted: "взвешенная", ratings: "оценок" },
-    resultsFor: (genre, period) => `${genre}, ${period}`,
     mal: "Открыть на MyAnimeList",
     anilist: "Открыть на AniList",
     footerBefore: "Данные — ",
@@ -316,26 +278,11 @@ export function formatNumber(value, language) {
   return new Intl.NumberFormat(COPY[language].locale).format(value);
 }
 
-export function compactNumber(value, language) {
-  return new Intl.NumberFormat(COPY[language].locale, {
-    notation: "compact",
-    maximumFractionDigits: 1,
-  }).format(value);
-}
-
 function ruPlural(value, forms) {
   const category = new Intl.PluralRules("ru-RU").select(value);
   if (category === "one") return forms.one;
   if (category === "few") return forms.few;
   return forms.many;
-}
-
-export function ratingsText(value, language) {
-  const count = formatNumber(value, language);
-  if (language === "ru") {
-    return `${count} ${ruPlural(value, { one: "оценка", few: "оценки", many: "оценок" })}`;
-  }
-  return `${count} rating${value === 1 ? "" : "s"}`;
 }
 
 export function limitLabel(limit, language) {
@@ -360,16 +307,6 @@ export function titleCountText(shown, total, minRatings, language) {
   return `${head} ${noun}${suffix}`;
 }
 
-export function rankingHint(sort, limit, language) {
-  const by = {
-    score: language === "ru" ? "по оценке AniList" : "by AniList score",
-    bayes: language === "ru" ? "по взвешенной оценке" : "by weighted score",
-    votes: language === "ru" ? "по числу оценок" : "by number of ratings",
-  }[sort];
-  if (limit > 0) return `${limitLabel(limit, language)} ${by}`;
-  return language === "ru" ? `Все совпадения ${by}` : `Every match, sorted ${by}`;
-}
-
 export function episodeText(media, language) {
   const t = COPY[language].episode;
   if (!media.episodes) return media.isLive ? t.tba : "";
@@ -391,11 +328,6 @@ export function periodText(year, season, language) {
   if (!season) return String(year);
   const name = COPY[language].seasonShort[season];
   return `${name} ${year}`;
-}
-
-export function genreListText(genres, language) {
-  if (genres.length === 0) return COPY[language].allGenres;
-  return genres.map((genre) => genreName(genre, language)).join(" + ");
 }
 
 // "in 2 days", "через 5 часов": the next episode is always in the future, but a
