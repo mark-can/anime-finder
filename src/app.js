@@ -879,9 +879,14 @@ function renderCard(media, rank, searchFilters, sort, big = false) {
   const art = el("span", "card-art");
   if (media.color) art.style.backgroundColor = media.color;
   const coverUrl = safeHttpsUrl(media.cover);
-  if (coverUrl) {
+  const coverLargeUrl = safeHttpsUrl(media.coverLarge);
+  if (coverUrl || coverLargeUrl) {
     const image = el("img");
-    image.src = coverUrl;
+    image.src = big ? coverLargeUrl || coverUrl : coverUrl || coverLargeUrl;
+    if (!big && coverUrl && coverLargeUrl && coverUrl !== coverLargeUrl) {
+      image.srcset = `${coverUrl} 230w, ${coverLargeUrl} 460w`;
+      image.sizes = "(max-width: 760px) 46vw, 190px";
+    }
     image.alt = "";
     image.loading = big ? "eager" : "lazy";
     image.decoding = "async";
@@ -1123,7 +1128,7 @@ function openDetail(id, trigger) {
 
   const head = el("div", "detail-head");
   const cover = el("img", "detail-cover");
-  const coverUrl = safeHttpsUrl(media.cover);
+  const coverUrl = safeHttpsUrl(media.coverLarge) || safeHttpsUrl(media.cover);
   if (coverUrl) cover.src = coverUrl;
   cover.alt = "";
   const heading = el("div", "detail-heading");

@@ -51,6 +51,9 @@ export function normalizeMedia(media) {
     genres: media.genres ?? [],
     country: media.countryOfOrigin ?? "",
     cover: media.coverImage?.large || media.coverImage?.medium || "",
+    // AniList's "large" cover is 230 px wide; "extraLarge" (460 px) keeps the
+    // big podium cards and high-density screens sharp.
+    coverLarge: media.coverImage?.extraLarge || media.coverImage?.large || media.coverImage?.medium || "",
     color: /^#[0-9a-f]{6}$/i.test(media.coverImage?.color ?? "") ? media.coverImage.color : "",
     isLive,
     details: null,

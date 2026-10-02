@@ -154,6 +154,7 @@ test("normalizeMedia prefers the large cover and falls back to the native title"
   );
 
   assert.equal(media.cover, "https://example.com/large.jpg");
+  assert.equal(media.coverLarge, "https://example.com/large.jpg");
   assert.equal(media.title, "葬送のフリーレン");
   assert.equal(media.color, "#e4a15d");
 });

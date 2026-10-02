@@ -20,7 +20,7 @@ test("several pages share one request through aliases", () => {
   assert.match(query, /p3:Page\(page:3/);
   assert.match(query, /\$genreIn:\[String\]/);
   assert.match(query, /genre_in:\$genreIn/);
-  assert.match(query, /coverImage\{ large medium color \}/);
+  assert.match(query, /coverImage\{ extraLarge large medium color \}/);
   assert.match(query, /title\{ romaji english native \}/);
   assert.doesNotMatch(query, /tag_in/);
 });
