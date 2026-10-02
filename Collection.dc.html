@@ -16,7 +16,7 @@ body{margin:0}
 a{color:#FFFFFF}a:hover{color:#FFE27A}
 </style>
 </helmet>
-<div style="width: 1440px; height: 2060px; box-sizing: border-box; padding: 34px 56px 48px; background: #3B2A8F; color: #FFFFFF; font-family: 'M PLUS Rounded 1c', sans-serif; display: flex; flex-direction: column; gap: 28px">
+<div style="width: 1440px; height: 1760px; box-sizing: border-box; padding: 34px 56px 48px; background: #3B2A8F; color: #FFFFFF; font-family: 'M PLUS Rounded 1c', sans-serif; display: flex; flex-direction: column; gap: 28px">
 
 <header style="display: flex; align-items: center; justify-content: space-between">
 <div style="font-weight: 900; font-size: 26px">Аниме по годам</div>
@@ -149,7 +149,7 @@ a{color:#FFFFFF}a:hover{color:#FFE27A}
 </section>
 </div>
 </x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2060}}'>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1760}}'>
 class Component extends DCLogic {
 renderVals() {
 var TIERS = [
@@ -193,9 +193,9 @@ var top = [
 [3, "Sound! Euphonium 3", "/_blob/3d1a0751f2170c120574880517bb74e8", "8.7", "13", "37K", "Kyoto Animation", ""]
 ];
 var heroPos = [
-{ left: 330, top: 0, w: 330, h: 540, rot: 0, z: 3 },
-{ left: 30, top: 46, w: 290, h: 474, rot: -6, z: 2 },
-{ left: 670, top: 46, w: 290, h: 474, rot: 6, z: 2 }
+{ left: 290, top: 0, w: 330, h: 540, rot: 0, z: 3 },
+{ left: 14, top: 46, w: 290, h: 474, rot: -6, z: 2 },
+{ left: 604, top: 46, w: 290, h: 474, rot: 6, z: 2 }
 ];
 var hero = top.map(function (d, i) {
 var c = card(d), p = heroPos[i];
