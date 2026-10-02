@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Стена — лучшее аниме 2024</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Sofia+Sans+Extra+Condensed:wght@600;800;900&amp;family=Sofia+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0}
+a{color:#FFFFFF}a:hover{color:#FFD9D6}
+</style>
+</helmet>
+<div style="width: 1440px; height: 1400px; box-sizing: border-box; background: #FFFFFF; color: #000000; font-family: 'Sofia Sans', sans-serif; display: flex; flex-direction: column">
+
+<header style="display: flex; align-items: center; justify-content: space-between; gap: 40px; padding: 28px 36px 26px">
+<form aria-label="Фильтры" style="margin: 0; font-family: 'Sofia Sans Extra Condensed'; font-weight: 800; font-size: 64px; line-height: 1.05; letter-spacing: -0.5px">
+<span>Лучшее</span>
+<button type="button" style="border: 0; background: none; padding: 0; font: inherit; color: #D7261E; text-decoration: underline; text-decoration-thickness: 4px; text-underline-offset: 8px; cursor: pointer">аниме-сериалы</button>
+<span>за</span>
+<button type="button" style="border: 0; background: none; padding: 0; font: inherit; color: #D7261E; text-decoration: underline; text-decoration-thickness: 4px; text-underline-offset: 8px; cursor: pointer">2024</button>
+<span>год,</span>
+<button type="button" style="border: 0; background: none; padding: 0; font: inherit; color: #D7261E; text-decoration: underline; text-decoration-thickness: 4px; text-underline-offset: 8px; cursor: pointer">все жанры</button><span>,</span>
+<span>кроме</span>
+<button type="button" style="border: 0; background: none; padding: 0; font: inherit; color: #D7261E; text-decoration: underline; text-decoration-thickness: 4px; text-underline-offset: 8px; cursor: pointer">того, что я уже видел</button>
+</form>
+<div style="display: flex; flex-direction: column; align-items: flex-end; gap: 12px; flex: none">
+<div style="display: flex; gap: 6px">
+<button type="button" style="height: 44px; min-width: 52px; border: 2px solid #000; border-radius: 22px; background: #FFF; font: 700 15px 'Sofia Sans'; cursor: pointer">EN</button>
+<button type="button" aria-pressed="true" style="height: 44px; min-width: 52px; border: 2px solid #000; border-radius: 22px; background: #000; color: #FFF; font: 700 15px 'Sofia Sans'; cursor: pointer">RU</button>
+</div>
+<p style="margin: 0; font-size: 14px; color: #444; text-align: right; line-height: 1.45">Площадь — сколько людей добавили тайтл в список.<br>Печать — средняя оценка на AniList.</p>
+</div>
+</header>
+
+<main style="flex-grow: 1; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); grid-template-rows: repeat(5, minmax(0, 1fr)); gap: 6px; padding: 0 6px 6px">
+<sc-for list="{{tiles}}" as="t" hint-placeholder-count="10">
+<a href="#" style="{{t.cell}}">
+<img src="{{t.img}}" alt="" style="position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover">
+<span style="position: absolute; inset: 0; background: linear-gradient(180deg, rgba(0,0,0,0) 45%, rgba(0,0,0,0.78) 100%)"></span>
+<span style="{{t.seal}}"><span style="{{t.sealScore}}">{{t.score}}</span></span>
+<span style="position: absolute; left: 14px; top: 10px; font-family: 'Sofia Sans Extra Condensed'; font-weight: 900; font-size: 28px; color: #FFFFFF; text-shadow: 0 1px 8px rgba(0,0,0,0.55)">{{t.rank}}</span>
+<span style="position: absolute; left: 14px; right: 14px; bottom: 12px; display: flex; flex-direction: column; gap: 2px">
+<span style="{{t.titleStyle}}">{{t.title}}</span>
+<span style="font-size: 13px; color: #E8E8E8">{{t.meta}}</span>
+</span>
+</a>
+</sc-for>
+<a href="#" style="grid-column: 5 / span 3; grid-row: 5; display: flex; align-items: center; justify-content: space-between; padding: 0 28px; background: #D7261E; color: #FFFFFF; text-decoration: none">
+<span style="font-family: 'Sofia Sans Extra Condensed'; font-weight: 900; font-size: 54px; line-height: 1">Ещё 64</span>
+<span style="font-size: 16px; font-weight: 600; text-align: right; line-height: 1.35">от 5 000 оценок,<br>отсортировано по оценке</span>
+</a>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1400}}'>
+class Component extends DCLogic {
+renderVals() {
+var data = [
+[1, "Frieren: Beyond Journey’s End", "MADHOUSE, 28 серий", "/_blob/88e590affc964db52f527ddeaccbd727", "9.1", "1 / span 3", "1 / span 4", 3],
+[2, "The Apothecary Diaries", "OLM, 24 серии", "/_blob/8780ff6493af0c83e065081d4e680db7", "8.8", "4 / span 2", "1 / span 3", 2],
+[8, "Delicious in Dungeon", "TRIGGER, 24 серии", "/_blob/2ef96bd91534ba0464f52c16ace92c26", "8.5", "6 / span 2", "1 / span 2", 2],
+[9, "Re:ZERO Season 3", "WHITE FOX", "/_blob/68ad94d3349a1a52dc9fbc87128fa155", "8.4", "8", "1 / span 3", 1],
+[7, "OSHI NO KO Season 2", "Doga Kobo", "/_blob/d72b05b95ddc9e73d35c9e011b58e203", "8.5", "6 / span 2", "3 / span 2", 2],
+[5, "Orb: On the Movements of the Earth", "MADHOUSE", "/_blob/a80ee7d2da4a279e8207a664fe49e1b4", "8.6", "4 / span 2", "4", 1],
+[4, "BLEACH: TYBW", "Pierrot Films", "/_blob/c0bbf6b67e575fcf0de8d8b759239002", "8.6", "8", "4 / span 2", 1],
+[6, "The Dangers in My Heart 2", "Shin-Ei Animation", "/_blob/2417bf59e1b225b28e63d1e54e989af5", "8.6", "1 / span 2", "5", 1],
+[10, "Girls Band Cry", "Toei", "/_blob/4b2f8ab38da316c75f599ede5ecebdde", "8.3", "3", "5", 0],
+[3, "Euphonium 3", "KyoAni", "/_blob/3d1a0751f2170c120574880517bb74e8", "8.7", "4", "5", 0]
+];
+var seal = [64, 80, 104, 150];
+var font = [26, 32, 42, 62];
+var title = [20, 26, 34, 52];
+var tilt = [-8, 6, -5, -9];
+var tiles = data.map(function (d) {
+var s = d[7];
+return {
+rank: d[0], title: d[1], meta: d[2], img: d[3], score: d[4],
+cell: "grid-column: " + d[5] + "; grid-row: " + d[6] + "; position: relative; overflow: hidden; display: block; text-decoration: none; color: #FFFFFF; background: #222",
+seal: "position: absolute; right: " + (10 + s * 6) + "px; top: " + (10 + s * 6) + "px; width: " + seal[s] + "px; height: " + seal[s] + "px; border-radius: 50%; background: #D7261E; box-shadow: inset 0 0 0 " + (3 + s) + "px #D7261E, inset 0 0 0 " + (5 + s) + "px #FFFFFF; display: flex; align-items: center; justify-content: center; transform: rotate(" + tilt[s] + "deg)",
+sealScore: "font-family: Sofia Sans Extra Condensed; font-weight: 900; color: #FFFFFF; line-height: 1; font-size: " + font[s] + "px",
+titleStyle: "font-family: Sofia Sans Extra Condensed; font-weight: 800; line-height: 0.98; font-size: " + title[s] + "px"
+};
+});
+return { tiles: tiles };
+}
+}
+</script>
+</body>
+</html>
