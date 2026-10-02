@@ -36,6 +36,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 html {
   -webkit-text-size-adjust: 100%;
   scrollbar-gutter: stable;
@@ -1005,6 +1009,7 @@ abbr.rarity-badge {
   justify-content: center;
   border-radius: 16px;
   background: var(--card);
+  box-shadow: 0 0 0 2px rgb(42 29 110 / 18%), 0 2px 8px rgb(16 8 64 / 30%);
   color: var(--bg-deep);
   font-size: 15px;
   font-weight: 900;
@@ -1144,7 +1149,10 @@ abbr.rarity-badge {
 
 .card-stat strong {
   display: block;
-  font-size: 21px;
+  overflow: hidden;
+  font-size: 19px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-weight: 900;
   line-height: 1.05;
 }
@@ -1475,7 +1483,18 @@ abbr.rarity-badge {
     margin: 0 calc(-1 * var(--page-pad));
     padding: 2px var(--page-pad) 6px;
     overflow-x: auto;
+    scroll-padding-inline: var(--page-pad);
     scroll-snap-type: x proximity;
+    scrollbar-width: none;
+  }
+
+  .chip-row .chips {
+    flex: 1 1 100%;
+    flex-wrap: nowrap;
+    margin: 0 calc(-1 * var(--page-pad));
+    padding: 2px var(--page-pad) 6px;
+    overflow-x: auto;
+    scroll-padding-inline: var(--page-pad);
     scrollbar-width: none;
   }
 
@@ -1497,6 +1516,7 @@ abbr.rarity-badge {
     padding: 8px var(--page-pad) 16px;
     gap: 14px;
     overflow-x: auto;
+    scroll-padding-inline: var(--page-pad);
     scroll-snap-type: x mandatory;
     scrollbar-width: none;
   }

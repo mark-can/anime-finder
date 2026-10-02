@@ -31,7 +31,6 @@ import {
   timelineFor,
 } from "./domain.js";
 import {
-  compactNumber,
   COPY,
   dateRangeText,
   episodeText,
@@ -226,6 +225,15 @@ function externalLink(url, text, className = "") {
   link.target = "_blank";
   link.rel = "noopener noreferrer";
   return link;
+}
+
+// Compact counts, one decimal below 100K ("47.1K") and none above ("292K"), so
+// they fit the narrow stat cells in both languages.
+function shortNumber(value) {
+  return new Intl.NumberFormat(COPY[language].locale, {
+    notation: "compact",
+    maximumFractionDigits: value >= 100_000 ? 0 : 1,
+  }).format(value);
 }
 
 function updateUrl() {
@@ -835,12 +843,12 @@ function hideResults() {
 function mainMetric(media, sort) {
   const t = COPY[language];
   if (sort === "votes") {
-    return { value: compactNumber(media.ratings, language), label: t.stat.ratings, sub: `${t.stat.score} ${media.score.toFixed(1)}` };
+    return { value: shortNumber(media.ratings), label: t.stat.ratings, sub: `${t.stat.score} ${media.score.toFixed(1)}` };
   }
   if (sort === "bayes") {
     return { value: media.weightedScore.toFixed(2), label: t.stat.weighted, sub: `${t.stat.score} ${media.score.toFixed(1)}` };
   }
-  return { value: media.score.toFixed(1), label: t.stat.score, sub: t.ratingsShort(compactNumber(media.ratings, language)) };
+  return { value: media.score.toFixed(1), label: t.stat.score, sub: t.ratingsShort(shortNumber(media.ratings)) };
 }
 
 function listRibbon(entry) {
@@ -908,7 +916,7 @@ function renderCard(media, rank, searchFilters, sort, big = false) {
     const stats = el("span", "card-stats");
     const second = sort === "votes"
       ? { value: media.score.toFixed(1), label: t.stat.score }
-      : { value: compactNumber(media.ratings, language), label: t.stat.ratings };
+      : { value: shortNumber(media.ratings), label: t.stat.ratings };
     for (const stat of [
       metric,
       { value: media.episodes ? String(media.episodes) : "?", label: t.stat.episodes },
@@ -1155,7 +1163,7 @@ function openDetail(id, trigger) {
   for (const stat of [
     { value: media.score.toFixed(1), label: t.stat.score },
     { value: media.weightedScore.toFixed(2), label: t.stat.weighted },
-    { value: compactNumber(media.ratings, language), label: t.stat.ratings },
+    { value: shortNumber(media.ratings), label: t.stat.ratings },
     { value: media.episodes ? String(media.episodes) : "?", label: t.stat.episodes },
   ]) {
     const cell = el("div", "card-stat");
