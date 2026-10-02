@@ -72,13 +72,13 @@ test("parseNameList drops malformed names, duplicates and anything past the cap"
   assert.deepEqual(parseNameList(null), []);
 });
 
-test("the default view asks for 5,000+ ratings, TV only, and an unlimited list", () => {
+test("the default view asks for every genre, 5,000+ ratings, TV only, and an unlimited list", () => {
   const state = parseUrlState("");
 
   assert.equal(state.filters.minRatings, 5_000);
   assert.equal(state.filters.limit, 0);
   assert.deepEqual(state.filters.formats, ["TV"]);
-  assert.deepEqual(state.filters.genres, ["Action"]);
+  assert.deepEqual(state.filters.genres, []);
   assert.equal(state.filters.firstSeasons, false);
   assert.equal(state.shouldAutoSearch, false);
 });

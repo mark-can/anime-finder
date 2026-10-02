@@ -353,6 +353,10 @@ svg {
   flex: 1 1 520px;
 }
 
+.filter-summary:empty {
+  display: none;
+}
+
 .chip-row-actions {
   display: flex;
   flex-wrap: wrap;

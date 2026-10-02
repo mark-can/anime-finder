@@ -17,12 +17,19 @@ Live site: <https://mark-can.github.io/anime-finder/>
   watch (official streaming links), and an expandable panel with the synopsis, banner and trailer.
 - Rank by AniList score, weighted score, or number of ratings.
 - List every match by default, or trim the list to the top 10, 25, 50, or 100.
-- Scores are colour-coded in six steps, from green for top-rated down to red.
-- Six accent themes, remembered between visits.
+- Every title is a collectible card. Its rarity comes from the AniList score in six steps:
+  UR (8.5 and up), SSR (8.0–8.4), SR (7.5–7.9), R (7.0–7.4), N (6.0–6.9) and C (below 6.0).
+  A legend and a bar show how many cards of each rarity the current search holds.
+- The top three cards stand on a podium; when sorted by score, the rest of the collection is grouped by
+  rarity, and long groups open in steps of 12. Selecting a card opens its details: banner, synopsis,
+  trailer, AniList rankings, studio, airing dates, streaming links, and links to AniList and MyAnimeList.
+- Filters apply as you change them; no "show" button. Year and season sit at the top, genres as chips,
+  and everything else (tags, formats, sequels, country, ratings threshold, airing status, sort order,
+  list length, your AniList list) in a filter panel, with active ones summarised next to it.
 - Include series that started in an earlier year but continued airing in the selected year.
 - English and Russian interface.
 - Shareable URLs that preserve all filters.
-- Responsive result cards for desktop and mobile.
+- Works from phones (scrolling season, genre and podium rows; two-column card grid) to wide screens.
 - Accessible labels, keyboard focus, live loading messages, and language state.
 - Request cancellation, timeout handling, AniList rate-limit awareness, and a bounded cache that survives
   reloads (localStorage), so reopening a recent search or shared link costs no API requests.

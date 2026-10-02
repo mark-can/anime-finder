@@ -4,8 +4,8 @@
   "description": "Find the highest-rated anime of any year using AniList data.",
   "start_url": "./",
   "display": "standalone",
-  "background_color": "#f1f0ea",
-  "theme_color": "#2e4260",
+  "background_color": "#3b2a8f",
+  "theme_color": "#3b2a8f",
   "icons": [
     {
       "src": "assets/favicon.svg",
