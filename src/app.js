@@ -966,7 +966,7 @@ function renderLegend(view, sections) {
     }
     row.dataset.empty = String(counts[rarity] === 0);
     const badge = rarityBadge(rarity, "abbr");
-    row.append(badge, el("span", "", `${t.tierRanges[rarity]} · ${t.tiers[rarity]}`), el("span", "legend-count", t.cards(counts[rarity])));
+    row.append(badge, el("span", "", t.tierRanges[rarity]), el("span", "legend-count", t.cards(counts[rarity])));
     const li = el("li");
     li.append(row);
     legend.append(li);
@@ -1141,7 +1141,7 @@ function openDetail(id, trigger) {
   cover.alt = "";
   const heading = el("div", "detail-heading");
   const badges = el("div", "detail-badges");
-  badges.append(rarityBadge(rarity, "abbr"), el("span", "pill", t.tiers[rarity]));
+  badges.append(rarityBadge(rarity, "abbr"));
   if (media.start?.year < year) badges.append(el("span", "pill pill-warm", t.badges.carry(media.start.year)));
   if (media.status === "RELEASING") badges.append(el("span", "pill pill-live", t.badges.releasing));
   if (media.status === "HIATUS") badges.append(el("span", "pill pill-live", t.badges.hiatus));
