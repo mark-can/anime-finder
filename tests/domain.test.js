@@ -156,6 +156,7 @@ test("normalizeMedia prefers the large cover and falls back to the native title"
   assert.equal(media.cover, "https://example.com/large.jpg");
   assert.equal(media.coverLarge, "https://example.com/large.jpg");
   assert.equal(media.title, "葬送のフリーレン");
+  assert.equal(media.romajiTitle, "");
   assert.equal(media.color, "#e4a15d");
 });
 
@@ -319,4 +320,11 @@ test("sectionsFor puts the top three on the podium and groups the rest by rarity
   const byVotes = sectionsFor(items, "votes");
   assert.deepEqual(byVotes.sections.map((section) => [section.rarity, section.items.length]), [[null, 5]]);
   assert.deepEqual(sectionsFor(items.slice(0, 2), "score").sections, []);
+});
+
+test("normalizeMedia keeps the romaji title for display above the English one", () => {
+  const media = normalizeMedia(rawMedia({ title: { english: "Frieren", romaji: "Sousou no Frieren", native: "葬送のフリーレン" } }));
+
+  assert.equal(media.title, "Frieren");
+  assert.equal(media.romajiTitle, "Sousou no Frieren");
 });

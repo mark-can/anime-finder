@@ -45,7 +45,7 @@ export function normalizeMedia(media) {
     score: media.averageScore ? media.averageScore / 10 : 0,
     ratings,
     title: media.title?.english || media.title?.romaji || media.title?.native || "Untitled",
-    nativeTitle: media.title?.native || "",
+    romajiTitle: media.title?.romaji || "",
     start: normalizeDate(media.startDate),
     end: normalizeDate(media.endDate, true),
     genres: media.genres ?? [],

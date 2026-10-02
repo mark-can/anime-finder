@@ -1148,14 +1148,32 @@ function openDetail(id, trigger) {
   if (media.status === "CANCELLED") badges.append(el("span", "pill pill-warm", t.badges.cancelled));
   const ribbon = listRibbon(entry);
   if (ribbon) badges.append(el("span", "pill pill-list", ribbon.text));
+  heading.append(badges);
+  // The romanized Japanese title sits above the English one, as on AniList.
+  if (media.romajiTitle && media.romajiTitle !== media.title) {
+    const romaji = el("p", "detail-romaji", media.romajiTitle);
+    romaji.lang = "ja-Latn";
+    heading.append(romaji);
+  }
   const title = el("h2", "detail-title", media.title);
   title.id = "detail-title";
-  heading.append(badges, title);
-  if (media.nativeTitle && media.nativeTitle !== media.title) {
-    const native = el("p", "detail-native", media.nativeTitle);
-    native.lang = "ja";
-    heading.append(native);
+  heading.append(title);
+
+  // The ways out of the card sit by the title so they never need scrolling.
+  const actions = el("div", "detail-actions");
+  const siteUrl = safeHttpsUrl(media.siteUrl);
+  if (siteUrl) {
+    const link = externalLink(siteUrl, "AniList", "action-link");
+    link.setAttribute("aria-label", t.anilist);
+    actions.append(link);
   }
+  if (media.idMal) {
+    const link = externalLink(`https://myanimelist.net/anime/${media.idMal}`, "MyAnimeList", "action-link");
+    link.setAttribute("aria-label", t.mal);
+    actions.append(link);
+  }
+  if (details?.trailer) actions.append(externalLink(details.trailer.url, `▶ ${t.trailer}`, "action-link"));
+  if (actions.childElementCount) heading.append(actions);
   head.append(cover, heading);
 
   const body = el("div", "detail-body");
@@ -1171,6 +1189,15 @@ function openDetail(id, trigger) {
     stats.append(cell);
   }
   body.append(stats);
+
+  if (details?.streaming.length) {
+    const watch = el("div");
+    watch.append(el("p", "detail-section-title", t.watch));
+    const links = el("p", "detail-watch");
+    for (const link of details.streaming.slice(0, 8)) links.append(externalLink(link.url, link.site));
+    watch.append(links);
+    body.append(watch);
+  }
 
   const rankings = pickRankings(details?.rankings);
   if (rankings.length) {
@@ -1201,35 +1228,6 @@ function openDetail(id, trigger) {
   const paragraphs = details?.description ? details.description.split(/\n\s*\n/) : [t.noDescription];
   for (const paragraph of paragraphs) about.append(el("p", "", paragraph.trim()));
   body.append(about);
-
-  if (details?.trailer) {
-    const trailer = externalLink(details.trailer.url, "", "detail-trailer");
-    if (details.trailer.thumbnail) {
-      const thumb = el("img");
-      thumb.src = details.trailer.thumbnail;
-      thumb.alt = "";
-      thumb.loading = "lazy";
-      thumb.addEventListener("error", () => thumb.remove());
-      trailer.append(thumb);
-    }
-    trailer.append(el("span", "", `▶ ${t.trailer}`));
-    body.append(trailer);
-  }
-
-  if (details?.streaming.length) {
-    const watch = el("div");
-    watch.append(el("p", "detail-section-title", t.watch));
-    const links = el("p", "detail-watch");
-    for (const link of details.streaming.slice(0, 8)) links.append(externalLink(link.url, link.site));
-    watch.append(links);
-    body.append(watch);
-  }
-
-  const links = el("p", "detail-links");
-  const siteUrl = safeHttpsUrl(media.siteUrl);
-  if (siteUrl) links.append(externalLink(siteUrl, t.anilist));
-  if (media.idMal) links.append(externalLink(`https://myanimelist.net/anime/${media.idMal}`, t.mal));
-  body.append(links);
 
   inner.append(banner, head, body);
   frame.append(inner);

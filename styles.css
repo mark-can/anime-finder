@@ -1279,6 +1279,8 @@ abbr.rarity-badge {
 }
 
 .detail-cover {
+  position: relative;
+  z-index: 1;
   width: 150px;
   margin-top: -60px;
   aspect-ratio: 460 / 650;
@@ -1308,11 +1310,41 @@ abbr.rarity-badge {
   line-height: 1.2;
 }
 
-.detail-native {
-  margin: 4px 0 0;
+.detail-romaji {
+  margin: 10px 0 0;
   color: var(--card-muted);
   font-size: 14px;
-  font-weight: 600;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.detail-romaji + .detail-title {
+  margin-top: 2px;
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+
+.action-link {
+  display: inline-flex;
+  min-height: 40px;
+  padding: 0 16px;
+  align-items: center;
+  border-radius: 20px;
+  background: var(--card-soft);
+  color: #3d22b8;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.action-link:hover {
+  background: var(--bg);
+  color: var(--ink);
 }
 
 .detail-body {
@@ -1360,7 +1392,6 @@ abbr.rarity-badge {
 }
 
 .detail-meta a,
-.detail-links a,
 .detail-watch a {
   color: #4b2bd6;
 }
@@ -1412,32 +1443,12 @@ abbr.rarity-badge {
   white-space: pre-line;
 }
 
-.detail-watch,
-.detail-links {
+.detail-watch {
   display: flex;
   flex-wrap: wrap;
   gap: 8px 14px;
   margin: 0;
   font-weight: 800;
-}
-
-.detail-trailer {
-  display: inline-flex;
-  width: fit-content;
-  flex-direction: column;
-  gap: 6px;
-  color: #4b2bd6;
-  font-weight: 800;
-  text-decoration: none;
-}
-
-.detail-trailer img {
-  display: block;
-  width: 240px;
-  max-width: 100%;
-  aspect-ratio: 16 / 9;
-  object-fit: cover;
-  border-radius: 12px;
 }
 
 /* Footer -------------------------------------------------------------------- */
