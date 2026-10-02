@@ -273,3 +273,43 @@ export function deriveView(matches, { sort, minRatings, limit, firstSeasons, lis
     hiddenByList,
   };
 }
+
+// Card rarity follows the same six score steps as the score colours, named the
+// way gacha games name card rarity.
+const RARITY_BY_TIER = { s: "ur", a: "ssr", b: "sr", c: "r", d: "n", e: "c", none: "none" };
+export const RARITY_ORDER = ["ur", "ssr", "sr", "r", "n", "c"];
+export const RARITY_LABELS = { ur: "UR", ssr: "SSR", sr: "SR", r: "R", n: "N", c: "C", none: "—" };
+
+export function rarityOf(score) {
+  return RARITY_BY_TIER[scoreTier(score)];
+}
+
+export function rarityCounts(media) {
+  const counts = Object.fromEntries(RARITY_ORDER.map((rarity) => [rarity, 0]));
+  for (const item of media) {
+    const rarity = rarityOf(item.score);
+    if (rarity in counts) counts[rarity] += 1;
+  }
+  return counts;
+}
+
+// The podium takes the first three titles; the rest are grouped by rarity when
+// the list is sorted by score (so each rarity is one contiguous run) and shown
+// as one group otherwise.
+export function sectionsFor(items, sort) {
+  const podium = items.slice(0, 3);
+  const rest = items.slice(3);
+  if (sort !== "score") return { podium, sections: rest.length ? [{ rarity: null, items: rest }] : [] };
+  const sections = [];
+  for (const item of rest) {
+    const rarity = rarityOf(item.score);
+    const last = sections[sections.length - 1];
+    if (last && last.rarity === rarity) last.items.push(item);
+    else sections.push({ rarity, items: [item] });
+  }
+  return { podium, sections };
+}
+
+export function isCollected(entry) {
+  return entry?.status === "COMPLETED" || entry?.status === "REPEATING";
+}
