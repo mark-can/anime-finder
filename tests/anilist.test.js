@@ -1,7 +1,14 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { DEFAULT_FILTERS } from "../src/config.js";
-import { buildSearchQuery, errorFromPayload, queryPasses, searchVariables } from "../src/anilist.js";
+import {
+  buildSearchQuery,
+  buildUserListQuery,
+  errorFromPayload,
+  listEntries,
+  queryPasses,
+  searchVariables,
+} from "../src/anilist.js";
 
 const filters = (overrides = {}) => ({
   ...DEFAULT_FILTERS,
@@ -50,4 +57,28 @@ test("AniList user errors map onto specific codes", () => {
   assert.equal(errorFromPayload([{ message: "User not found", status: 404 }]).code, "userNotFound");
   assert.equal(errorFromPayload([{ message: "Max query complexity", status: 400 }]).code, "complexity");
   assert.equal(errorFromPayload([{ message: "Too Many Requests.", status: 429 }]).code, "rateLimit");
+});
+
+test("a signed-in list is read by id, anyone else's by name", () => {
+  const byId = buildUserListQuery(true);
+  assert.match(byId, /\$userId:Int/);
+  assert.match(byId, /MediaListCollection\(userId:\$userId/);
+  assert.match(byId, /entries\{ id mediaId status/);
+  assert.match(buildUserListQuery(false), /MediaListCollection\(userName:\$userName/);
+});
+
+test("list entries keep their AniList id and the first copy of a title", () => {
+  const entries = listEntries({
+    lists: [
+      { entries: [{ id: 7, mediaId: 1, status: "COMPLETED", progress: 12, score: 9 }] },
+      { entries: [{ id: 7, mediaId: 1, status: "COMPLETED", progress: 12, score: 9 }, { id: 8, mediaId: 2, status: "PLANNING" }] },
+    ],
+  });
+  assert.deepEqual(entries[1], { id: 7, status: "COMPLETED", progress: 12, score: 9 });
+  assert.deepEqual(entries[2], { id: 8, status: "PLANNING", progress: 0, score: 0 });
+});
+
+test("a rejected token maps onto its own code", () => {
+  assert.equal(errorFromPayload([{ message: "Invalid token", status: 400 }]).code, "unauthorized");
+  assert.equal(errorFromPayload([{ message: "Unauthorized.", status: 401 }]).code, "unauthorized");
 });

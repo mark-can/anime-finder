@@ -90,7 +90,12 @@
           <div class="sheet-body">
             <fieldset id="user-section" class="sheet-section">
               <legend id="user-label">Your AniList list</legend>
-              <div class="user-controls">
+              <div id="auth-row" class="auth-row" hidden>
+                <button id="auth-sign-in" class="pill-button pill-button-gold" type="button">Sign in with AniList</button>
+                <button id="auth-sign-out" class="link-button" type="button" hidden>Sign out</button>
+                <p id="auth-status" class="hint" role="status" aria-live="polite"></p>
+              </div>
+              <div id="user-controls" class="user-controls">
                 <label id="user-name-label" class="visually-hidden" for="user-name">AniList username</label>
                 <input id="user-name" class="text-input" type="text" autocomplete="username" spellcheck="false" maxlength="40" />
                 <button id="user-load" class="pill-button" type="button">Load list</button>
