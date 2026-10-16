@@ -36,6 +36,7 @@ import {
   normalizeMedia,
   normalizeRecommendations,
   pickRankings,
+  rankMedia,
   RARITY_LABELS,
   RARITY_ORDER,
   rarityCounts,
@@ -1395,7 +1396,12 @@ function renderRecommendations(media, token, signal) {
 // Looks in everything the search found, not only what is shown: a title the
 // list filter hides (say, just marked completed) can still be in the dialog.
 function findMedia(id) {
-  return currentResults?.matches.find((item) => item.id === id) ?? null;
+  if (!currentResults) return null;
+  const shown = currentResults.view?.all.find((item) => item.id === id);
+  if (shown) return shown;
+  if (!currentResults.matches.some((item) => item.id === id)) return null;
+  // Hidden titles carry no weighted score yet, so rank them alongside the rest.
+  return rankMedia(currentResults.matches, filters.sort, currentResults.filters.minRatings).find((item) => item.id === id);
 }
 
 function renderTimeline(media, year) {
