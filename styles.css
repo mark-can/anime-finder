@@ -1451,6 +1451,185 @@ abbr.rarity-badge {
   font-weight: 800;
 }
 
+/* Your list, from the card dialog ------------------------------------------- */
+
+.detail-list {
+  margin-top: 14px;
+}
+
+.detail-list-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+
+.detail-list-add {
+  min-height: 40px;
+  padding: 0 16px;
+}
+
+.detail-list-select {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 2px solid var(--card-soft);
+  border-radius: 20px;
+  background: var(--card-soft);
+  color: var(--card-ink);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.detail-list-select:disabled {
+  cursor: progress;
+  opacity: 0.6;
+}
+
+.detail .hint {
+  color: var(--card-muted);
+}
+
+.detail .hint[data-kind="error"] {
+  color: #b42318;
+}
+
+.detail .link-button {
+  min-height: 40px;
+  padding: 0;
+  color: #4b2bd6;
+}
+
+.detail .link-button:hover {
+  color: var(--card-ink);
+}
+
+/* Similar cards ---------------------------------------------------------------- */
+
+.detail-recs .detail-section-title {
+  margin: 0;
+}
+
+.detail-recs-status {
+  margin: 2px 0 10px;
+  color: var(--card-muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.rec-list {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 12px;
+  list-style: none;
+}
+
+.rec-card {
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 4px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--foil, var(--foil-none));
+  color: var(--card-ink);
+  cursor: pointer;
+  text-align: left;
+  text-decoration: none;
+  transition: transform 0.18s ease;
+}
+
+.rec-card:hover {
+  transform: translateY(-3px);
+}
+
+.rec-inner {
+  display: flex;
+  height: 100%;
+  overflow: hidden;
+  flex-direction: column;
+  border-radius: 9px;
+  background: var(--card);
+}
+
+.rec-art {
+  position: relative;
+  aspect-ratio: 460 / 650;
+  overflow: hidden;
+  background: var(--card-soft);
+}
+
+.rec-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.rec-art .rarity-badge {
+  position: absolute;
+  left: 5px;
+  top: 5px;
+  min-width: 0;
+  padding: 1px 6px;
+  font-size: 11.5px;
+}
+
+.rec-art .card-ribbon {
+  padding: 3px 6px;
+  font-size: 10.5px;
+}
+
+.rec-title {
+  display: -webkit-box;
+  margin: 6px 8px 0;
+  overflow: hidden;
+  font-size: 12.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.rec-meta {
+  margin: 2px 8px 8px;
+  color: var(--card-muted);
+  font-size: 11.5px;
+  font-weight: 700;
+}
+
+a.rec-card .rec-meta::after {
+  content: " ↗";
+}
+
+/* Sign-in row in the filter sheet -------------------------------------------- */
+
+.auth-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.auth-row .hint {
+  flex-basis: 100%;
+  margin-top: 0;
+}
+
+.collector-avatar {
+  overflow: hidden;
+}
+
+.collector-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
 /* Footer -------------------------------------------------------------------- */
 
 .site-footer {
@@ -1605,6 +1784,12 @@ abbr.rarity-badge {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .rec-card,
+  .rec-card:hover {
+    transition: none;
+    transform: none;
+  }
+
   *,
   *::before,
   *::after {

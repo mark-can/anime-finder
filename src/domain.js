@@ -316,3 +316,30 @@ export function sectionsFor(items, sort) {
 export function isCollected(entry) {
   return entry?.status === "COMPLETED" || entry?.status === "REPEATING";
 }
+
+// AniList's user recommendations for a title, best voted first: adult titles,
+// removed titles and titles nobody voted for are left out.
+export function normalizeRecommendations(nodes, limit) {
+  const seen = new Set();
+  const items = [];
+  for (const node of nodes ?? []) {
+    const media = node?.mediaRecommendation;
+    if (!media?.id || media.isAdult || seen.has(media.id) || !(node.rating > 0)) continue;
+    seen.add(media.id);
+    const score = media.averageScore ? media.averageScore / 10 : 0;
+    items.push({
+      id: media.id,
+      title: media.title?.english || media.title?.romaji || media.title?.native || "Untitled",
+      score,
+      rarity: rarityOf(score),
+      year: media.startDate?.year ?? null,
+      format: media.format ?? null,
+      cover: safeHttpsUrl(media.coverImage?.large || media.coverImage?.medium || ""),
+      color: /^#[0-9a-f]{6}$/i.test(media.coverImage?.color ?? "") ? media.coverImage.color : "",
+      siteUrl: safeHttpsUrl(media.siteUrl),
+      votes: node.rating,
+    });
+    if (items.length >= limit) break;
+  }
+  return items;
+}

@@ -19,6 +19,7 @@ import {
   scoreTier,
   timelineFor,
   trailerLinks,
+  normalizeRecommendations,
 } from "../src/domain.js";
 
 function rawMedia(overrides = {}) {
@@ -327,4 +328,36 @@ test("normalizeMedia keeps the romaji title for display above the English one", 
 
   assert.equal(media.title, "Frieren");
   assert.equal(media.romajiTitle, "Sousou no Frieren");
+});
+
+test("recommendations skip adult, unvoted and repeated titles and carry a rarity", () => {
+  const media = (id, extra = {}) => ({
+    id,
+    siteUrl: `https://anilist.co/anime/${id}`,
+    format: "TV",
+    averageScore: 86,
+    isAdult: false,
+    title: { romaji: `Romaji ${id}`, english: null },
+    startDate: { year: 2019 },
+    coverImage: { large: `https://img.anili.st/${id}.jpg`, color: "#aabbcc" },
+    ...extra,
+  });
+  const items = normalizeRecommendations(
+    [
+      { rating: 120, mediaRecommendation: media(1) },
+      { rating: 80, mediaRecommendation: media(2, { isAdult: true }) },
+      { rating: 0, mediaRecommendation: media(3) },
+      { rating: 40, mediaRecommendation: null },
+      { rating: 30, mediaRecommendation: media(1) },
+      { rating: 20, mediaRecommendation: media(4, { averageScore: null, siteUrl: "javascript:alert(1)" }) },
+      { rating: 10, mediaRecommendation: media(5) },
+    ],
+    2,
+  );
+  assert.deepEqual(items.map((item) => item.id), [1, 4]);
+  assert.equal(items[0].rarity, "ur");
+  assert.equal(items[0].title, "Romaji 1");
+  assert.equal(items[0].year, 2019);
+  assert.equal(items[1].score, 0);
+  assert.ok(!items[1].siteUrl);
 });

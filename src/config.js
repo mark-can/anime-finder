@@ -63,6 +63,25 @@ export const LIMIT_OPTIONS = [0, 10, 25, 50, 100];
 export const USER_STORAGE_KEY = "anime-finder:user";
 export const CACHE_STORAGE_PREFIX = "anime-finder:cache:";
 
+// Signing in uses AniList's implicit grant: AniList sends the browser back to
+// the redirect URL registered for a client, with the token in the URL fragment.
+// Each client has exactly one redirect URL, so clients are keyed by the page
+// address. A page with no client here simply doesn't offer signing in.
+// Register clients at https://anilist.co/settings/developer.
+export const ANILIST_AUTHORIZE_URL = "https://anilist.co/api/v2/oauth/authorize";
+export const AUTH_CLIENTS = {
+  "https://mark-can.github.io/anime-finder/": "",
+};
+export const AUTH_STORAGE_KEY = "anime-finder:auth";
+// The page address (with its filters) to come back to after signing in.
+export const AUTH_RETURN_KEY = "anime-finder:auth-return";
+
+// Statuses a title can be given from the card dialog, in AniList's order.
+export const LIST_STATUSES = ["PLANNING", "CURRENT", "COMPLETED", "REPEATING", "PAUSED", "DROPPED"];
+
+export const RECOMMENDATIONS_SHOWN = 6;
+export const RECOMMENDATIONS_TTL_MS = 24 * 60 * 60 * 1000;
+
 export const DEFAULT_FILTERS = Object.freeze({
   year: MAX_YEAR,
   season: "",

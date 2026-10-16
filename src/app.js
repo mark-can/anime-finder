@@ -1,4 +1,15 @@
-import { ApiError, collectMedia, fetchCollections, fetchDetails, fetchUserList } from "./anilist.js";
+import {
+  ApiError,
+  collectMedia,
+  deleteListEntry,
+  fetchCollections,
+  fetchDetails,
+  fetchRecommendations,
+  fetchUserList,
+  fetchViewer,
+  saveListEntry,
+} from "./anilist.js";
+import { beginSignIn, clearSession, clientIdFor, consumeRedirect, loadSession } from "./auth.js";
 import {
   COUNTRIES,
   DEFAULT_FILTERS,
@@ -7,10 +18,12 @@ import {
   HIDDEN_GENRES,
   LIMIT_OPTIONS,
   LIST_HIDE_MODES,
+  LIST_STATUSES,
   MAX_SELECTED,
   MAX_YEAR,
   MIN_RATING_OPTIONS,
   MIN_YEAR,
+  RECOMMENDATIONS_SHOWN,
   SEASONS,
   TAG_RANK_OPTIONS,
   USER_STORAGE_KEY,
@@ -21,6 +34,7 @@ import {
   isCollected,
   normalizeDetails,
   normalizeMedia,
+  normalizeRecommendations,
   pickRankings,
   RARITY_LABELS,
   RARITY_ORDER,
@@ -77,6 +91,11 @@ const elements = {
   panelReset: $("#filters-reset"),
   panelDone: $("#filters-done"),
   userSection: $("#user-section"),
+  authRow: $("#auth-row"),
+  authSignIn: $("#auth-sign-in"),
+  authSignOut: $("#auth-sign-out"),
+  authStatus: $("#auth-status"),
+  userControls: $("#user-controls"),
   userName: $("#user-name"),
   userLoad: $("#user-load"),
   userForget: $("#user-forget"),
@@ -171,6 +190,9 @@ function cloneFilters(value) {
   };
 }
 
+// A return from AniList's sign-in page carries the token in the address; it is
+// taken out (and the filters put back) before the address is read for filters.
+const authReturn = consumeRedirect();
 const initial = parseUrlState();
 let language = initial.language;
 let filters = cloneFilters(initial.filters);
@@ -195,6 +217,22 @@ let busy = false;
 let searchTimer = 0;
 let expandedSections = new Set();
 let detailReturnFocus = null;
+let detailController = null;
+// Bumped whenever the dialog shows another title, so late answers for the
+// previous one are dropped.
+let detailToken = 0;
+
+const auth = {
+  // Empty when this page address has no registered AniList client.
+  clientId: clientIdFor(),
+  session: loadSession(),
+  viewer: null,
+  state: "idle",
+  message: authReturn?.error ? "failed" : null,
+};
+// List changes in flight and the last outcome per title, for the card dialog.
+const pendingSaves = new Set();
+const listNotes = new Map();
 
 /* Small DOM helpers ------------------------------------------------------- */
 
@@ -654,8 +692,32 @@ function saveUser() {
   writeStorage(USER_STORAGE_KEY, user.name ? JSON.stringify({ name: user.name, hideMode: user.hideMode }) : null);
 }
 
+function renderAuth() {
+  const t = COPY[language];
+  const signedIn = Boolean(auth.viewer);
+  const checking = auth.state === "checking";
+  elements.authRow.hidden = !auth.clientId && !signedIn && !checking;
+  elements.authSignIn.textContent = t.signIn;
+  elements.authSignIn.hidden = signedIn || checking;
+  elements.authSignOut.textContent = t.signOut;
+  elements.authSignOut.hidden = !signedIn;
+  elements.userControls.hidden = signedIn || checking;
+
+  let text = t.signInHint;
+  let kind = "info";
+  if (checking) text = t.signInLoading;
+  else if (signedIn) text = t.signedInAs(auth.viewer.name);
+  else if (auth.message) {
+    text = auth.message === "expired" ? t.signInExpired : t.signInFailed;
+    kind = "error";
+  }
+  elements.authStatus.textContent = text;
+  elements.authStatus.dataset.kind = kind;
+}
+
 function renderUserControls() {
   const t = COPY[language];
+  renderAuth();
   elements.userName.placeholder = t.userPlaceholder;
   if (document.activeElement !== elements.userName) elements.userName.value = user.name;
   elements.userLoad.textContent = t.loadList;
@@ -688,7 +750,18 @@ function renderUserStatus() {
 function renderCollector() {
   const t = COPY[language];
   if (user.list) {
-    elements.collectorAvatar.textContent = user.list.userName.charAt(0).toUpperCase();
+    const avatar = auth.viewer?.avatar ? safeHttpsUrl(auth.viewer.avatar) : "";
+    if (avatar) {
+      const image = el("img");
+      image.src = avatar;
+      image.alt = "";
+      image.addEventListener("error", () => {
+        elements.collectorAvatar.textContent = user.list?.userName.charAt(0).toUpperCase() ?? "+";
+      });
+      elements.collectorAvatar.replaceChildren(image);
+    } else {
+      elements.collectorAvatar.textContent = user.list.userName.charAt(0).toUpperCase();
+    }
     elements.collectorName.textContent = user.list.userName;
     const matches = currentResults?.matches ?? [];
     const owned = matches.filter((item) => isCollected(user.list.entries[item.id])).length;
@@ -712,7 +785,9 @@ function setHideMode(mode) {
 }
 
 async function loadUserList() {
-  const name = elements.userName.value.trim();
+  // Signed in, the list is the viewer's own and is read with their token.
+  const viewer = auth.viewer;
+  const name = viewer ? viewer.name : elements.userName.value.trim();
   if (!name) return;
   userController?.abort();
   const controller = new AbortController();
@@ -723,7 +798,11 @@ async function loadUserList() {
   renderUserControls();
 
   try {
-    const list = await fetchUserList(name, { signal: controller.signal });
+    const list = await fetchUserList(name, {
+      signal: controller.signal,
+      viewer,
+      token: viewer ? auth.session?.token : null,
+    });
     if (controller.signal.aborted) return;
     user.list = list;
     user.name = list.userName;
@@ -731,6 +810,7 @@ async function loadUserList() {
     saveUser();
   } catch (error) {
     if (error.name === "AbortError") return;
+    if (viewer && error instanceof ApiError && error.code === "unauthorized") endSession("expired");
     user.list = null;
     user.state = "error";
     user.error = error instanceof ApiError ? error.code : "generic";
@@ -751,6 +831,50 @@ function forgetUser() {
   saveUser();
   renderUserControls();
   if (currentResults) renderResults(currentResults, false);
+}
+
+/* Signing in to AniList ------------------------------------------------------ */
+
+function endSession(reason = null) {
+  clearSession();
+  auth.session = null;
+  auth.viewer = null;
+  auth.state = "idle";
+  auth.message = reason;
+}
+
+// Checks a stored token by asking who it belongs to, then loads that person's
+// list. Returns false when nobody is signed in afterwards.
+async function startSession() {
+  if (!auth.session) return false;
+  auth.state = "checking";
+  renderUserControls();
+  try {
+    auth.viewer = await fetchViewer(auth.session.token);
+    auth.state = "ready";
+    auth.message = null;
+  } catch (error) {
+    // A rejected token is gone for good; a network failure keeps it for the
+    // next visit.
+    if (error instanceof ApiError && error.code === "unauthorized") endSession("expired");
+    else auth.state = "idle";
+  }
+  renderUserControls();
+  if (!auth.viewer) return false;
+  user.name = auth.viewer.name;
+  await loadUserList();
+  return true;
+}
+
+function signIn() {
+  if (auth.clientId) beginSignIn(auth.clientId);
+}
+
+function signOut() {
+  endSession();
+  listNotes.clear();
+  forgetUser();
+  if (elements.detail.open) closeDetail();
 }
 
 /* Language ------------------------------------------------------------------- */
@@ -1081,8 +1205,197 @@ function userMessageFor(error) {
 
 /* Detail dialog ---------------------------------------------------------------- */
 
+/* Your list, from the card dialog ---------------------------------------------- */
+
+function listPill(entry) {
+  const pill = el("span", "pill pill-list");
+  pill.dataset.listPill = "1";
+  const ribbon = listRibbon(entry);
+  pill.textContent = ribbon?.text ?? "";
+  pill.hidden = !ribbon;
+  return pill;
+}
+
+function renderListControl(media) {
+  const t = COPY[language];
+  const box = el("div", "detail-list");
+  box.dataset.listControl = String(media.id);
+
+  if (!auth.viewer) {
+    if (!auth.clientId || auth.state === "checking") return null;
+    const button = el("button", "link-button detail-sign-in", t.signInToSave);
+    button.type = "button";
+    button.dataset.signIn = "1";
+    box.append(button);
+    return box;
+  }
+
+  const entry = user.list?.entries[media.id];
+  const saving = pendingSaves.has(media.id);
+  const row = el("div", "detail-list-row");
+  if (!entry) {
+    const quick = el("button", "pill-button pill-button-gold detail-list-add", t.addToPlanning);
+    quick.type = "button";
+    quick.dataset.listStatus = "PLANNING";
+    quick.disabled = saving;
+    row.append(quick);
+  }
+  const select = el("select", "detail-list-select");
+  select.id = `detail-list-${media.id}`;
+  select.dataset.listSelect = String(media.id);
+  select.append(option("", t.notOnList));
+  for (const status of LIST_STATUSES) select.append(option(status, t.listStatusOptions[status]));
+  select.value = entry?.status ?? "";
+  select.disabled = saving;
+  const label = el("label", "visually-hidden", t.myList);
+  label.htmlFor = select.id;
+  row.append(label, select);
+
+  const note = el("p", "hint detail-list-note");
+  note.setAttribute("role", "status");
+  const outcome = listNotes.get(media.id);
+  if (outcome) {
+    note.textContent = outcome.text;
+    note.dataset.kind = outcome.kind;
+  }
+  box.append(row, note);
+  return box;
+}
+
+// Redraws the list control and the list badge of the open dialog in place,
+// keeping keyboard focus on the control.
+function refreshDetailList(mediaId) {
+  if (!elements.detail.open) return;
+  const media = findMedia(mediaId);
+  const current = elements.detail.querySelector(`[data-list-control="${mediaId}"]`);
+  if (!media || !current) return;
+  const hadFocus = current.contains(document.activeElement);
+  const next = renderListControl(media);
+  if (next) current.replaceWith(next);
+  else current.remove();
+  if (hadFocus) next?.querySelector("select, button")?.focus();
+  elements.detail.querySelector("[data-list-pill]")?.replaceWith(listPill(user.list?.entries[mediaId]));
+}
+
+async function changeListStatus(mediaId, status) {
+  const t = COPY[language];
+  const token = auth.session?.token;
+  if (!auth.viewer || !token || pendingSaves.has(mediaId)) return;
+  const entry = user.list?.entries[mediaId];
+  if ((entry?.status ?? "") === status) return;
+
+  pendingSaves.add(mediaId);
+  listNotes.set(mediaId, { text: t.listSaving, kind: "info" });
+  refreshDetailList(mediaId);
+  try {
+    if (!user.list) user.list = { userName: auth.viewer.name, siteUrl: auth.viewer.siteUrl, entries: {} };
+    if (status) {
+      user.list.entries[mediaId] = await saveListEntry(token, mediaId, status);
+    } else if (entry?.id) {
+      await deleteListEntry(token, entry.id);
+      delete user.list.entries[mediaId];
+    }
+    const savedLabel = status ? COPY[language].listStatusOptions[status] : null;
+    listNotes.set(mediaId, { text: COPY[language].listSaved(savedLabel), kind: "info" });
+  } catch (error) {
+    const expired = error instanceof ApiError && error.code === "unauthorized";
+    if (expired) endSession("expired");
+    listNotes.set(mediaId, {
+      text: expired ? COPY[language].signInExpired : COPY[language].listSaveFailed,
+      kind: "error",
+    });
+  } finally {
+    pendingSaves.delete(mediaId);
+  }
+  renderUserControls();
+  if (currentResults) renderResults(currentResults, false);
+  refreshDetailList(mediaId);
+}
+
+/* Recommendations -------------------------------------------------------------- */
+
+function renderRecommendation(item) {
+  const t = COPY[language];
+  const inCollection = Boolean(findMedia(item.id));
+  if (!inCollection && !item.siteUrl) return null;
+  const node = inCollection ? el("button", "rec-card") : externalLink(item.siteUrl, null, "rec-card");
+  if (inCollection) {
+    node.type = "button";
+    node.dataset.recId = String(item.id);
+    node.setAttribute("aria-haspopup", "dialog");
+  }
+  node.dataset.tier = item.rarity;
+
+  const inner = el("span", "rec-inner");
+  const art = el("span", "rec-art");
+  if (item.color) art.style.backgroundColor = item.color;
+  if (item.cover) {
+    const image = el("img");
+    image.src = item.cover;
+    image.alt = "";
+    image.loading = "lazy";
+    image.decoding = "async";
+    image.addEventListener("error", () => image.remove());
+    art.append(image);
+  }
+  art.append(rarityBadge(item.rarity));
+  const entry = user.list?.entries[item.id];
+  const ribbon = listRibbon(entry);
+  if (ribbon) {
+    const strip = el("span", "card-ribbon", ribbon.text);
+    strip.dataset.status = ribbon.status;
+    art.append(strip);
+  }
+
+  const meta = [item.score ? item.score.toFixed(1) : null, item.year, t.formats[item.format] ?? item.format]
+    .filter(Boolean)
+    .join(" · ");
+  inner.append(art, el("span", "rec-title", item.title), el("span", "rec-meta", meta));
+  if (!inCollection) inner.append(el("span", "visually-hidden", t.opensOnAniList));
+  node.append(inner);
+  return node;
+}
+
+function renderRecommendations(media, token, signal) {
+  const t = COPY[language];
+  const box = el("section", "detail-recs");
+  const title = el("h3", "detail-section-title", t.recommendations);
+  title.id = "detail-recs-title";
+  box.setAttribute("aria-labelledby", title.id);
+  const status = el("p", "detail-recs-status", t.recommendationsLoading);
+  box.append(title, status);
+
+  fetchRecommendations(media.id, { signal })
+    .then((nodes) => {
+      if (token !== detailToken) return;
+      const items = normalizeRecommendations(nodes, RECOMMENDATIONS_SHOWN);
+      const list = el("ul", "rec-list");
+      for (const item of items) {
+        const card = renderRecommendation(item);
+        if (!card) continue;
+        const li = el("li");
+        li.append(card);
+        list.append(li);
+      }
+      if (!list.childElementCount) {
+        status.textContent = COPY[language].recommendationsEmpty;
+        return;
+      }
+      status.textContent = COPY[language].recommendationsHint;
+      box.append(list);
+    })
+    .catch((error) => {
+      if (error.name === "AbortError" || token !== detailToken) return;
+      console.error("Anime Finder could not load recommendations", error.code ?? error.name);
+      status.textContent = COPY[language].recommendationsFailed;
+    });
+  return box;
+}
+
+// Looks in everything the search found, not only what is shown: a title the
+// list filter hides (say, just marked completed) can still be in the dialog.
 function findMedia(id) {
-  return currentResults?.view?.all.find((item) => item.id === id) ?? null;
+  return currentResults?.matches.find((item) => item.id === id) ?? null;
 }
 
 function renderTimeline(media, year) {
@@ -1112,6 +1425,9 @@ function openDetail(id, trigger) {
   const details = media.details;
   const entry = user.list?.entries[media.id];
   detailReturnFocus = trigger;
+  detailController?.abort();
+  detailController = new AbortController();
+  detailToken += 1;
 
   const frame = el("div", "detail-frame");
   frame.dataset.tier = rarity;
@@ -1146,8 +1462,7 @@ function openDetail(id, trigger) {
   if (media.status === "RELEASING") badges.append(el("span", "pill pill-live", t.badges.releasing));
   if (media.status === "HIATUS") badges.append(el("span", "pill pill-live", t.badges.hiatus));
   if (media.status === "CANCELLED") badges.append(el("span", "pill pill-warm", t.badges.cancelled));
-  const ribbon = listRibbon(entry);
-  if (ribbon) badges.append(el("span", "pill pill-list", ribbon.text));
+  badges.append(listPill(entry));
   heading.append(badges);
   // The romanized Japanese title sits above the English one, as on AniList.
   if (media.romajiTitle && media.romajiTitle !== media.title) {
@@ -1174,6 +1489,8 @@ function openDetail(id, trigger) {
   }
   if (details?.trailer) actions.append(externalLink(details.trailer.url, `▶ ${t.trailer}`, "action-link"));
   if (actions.childElementCount) heading.append(actions);
+  const listControl = renderListControl(media);
+  if (listControl) heading.append(listControl);
   head.append(cover, heading);
 
   const body = el("div", "detail-body");
@@ -1228,11 +1545,14 @@ function openDetail(id, trigger) {
   const paragraphs = details?.description ? details.description.split(/\n\s*\n/) : [t.noDescription];
   for (const paragraph of paragraphs) about.append(el("p", "", paragraph.trim()));
   body.append(about);
+  body.append(renderRecommendations(media, detailToken, detailController.signal));
 
   inner.append(banner, head, body);
   frame.append(inner);
   elements.detail.replaceChildren(frame);
-  elements.detail.showModal();
+  // A similar card opens in the dialog that is already showing.
+  if (!elements.detail.open) elements.detail.showModal();
+  elements.detail.scrollTop = 0;
   close.focus();
 }
 
@@ -1455,6 +1775,8 @@ elements.userName.addEventListener("keydown", (event) => {
   loadUserList();
 });
 elements.userLoad.addEventListener("click", loadUserList);
+elements.authSignIn.addEventListener("click", signIn);
+elements.authSignOut.addEventListener("click", signOut);
 elements.userForget.addEventListener("click", forgetUser);
 elements.hideMode.addEventListener("change", () => setHideMode(elements.hideMode.value));
 elements.unownedToggle.addEventListener("click", () => setHideMode(user.hideMode === "none" ? "seen" : "none"));
@@ -1463,7 +1785,9 @@ elements.openFilters.addEventListener("click", () => openPanel());
 elements.filterSummary.addEventListener("click", (event) => {
   if (event.target.closest("[data-open-filters]")) openPanel();
 });
-elements.collector.addEventListener("click", () => openPanel(elements.userName));
+elements.collector.addEventListener("click", () =>
+  openPanel(elements.userControls.hidden ? null : elements.userName),
+);
 elements.panelClose.addEventListener("click", closePanel);
 elements.panelDone.addEventListener("click", closePanel);
 elements.panelReset.addEventListener("click", resetExtras);
@@ -1496,10 +1820,38 @@ elements.results.addEventListener("click", (event) => {
 });
 
 elements.detail.addEventListener("click", (event) => {
-  if (event.target === elements.detail || event.target.closest("[data-close-detail]")) closeDetail();
+  if (event.target === elements.detail || event.target.closest("[data-close-detail]")) {
+    closeDetail();
+    return;
+  }
+  const rec = event.target.closest("[data-rec-id]");
+  if (rec) {
+    openDetail(Number(rec.dataset.recId), detailReturnFocus);
+    return;
+  }
+  const quick = event.target.closest("[data-list-status]");
+  if (quick) {
+    const control = quick.closest("[data-list-control]");
+    changeListStatus(Number(control.dataset.listControl), quick.dataset.listStatus);
+    return;
+  }
+  if (event.target.closest("[data-sign-in]")) signIn();
+});
+elements.detail.addEventListener("change", (event) => {
+  const select = event.target.closest("[data-list-select]");
+  if (select) changeListStatus(Number(select.dataset.listSelect), select.value);
 });
 elements.detail.addEventListener("close", () => {
-  detailReturnFocus?.focus();
+  detailController?.abort();
+  detailController = null;
+  detailToken += 1;
+  // Saving to the list redraws the grid, so the card that opened the dialog
+  // may have been replaced by an identical one, or hidden by the list filter.
+  let target = detailReturnFocus;
+  if (target && !target.isConnected && target.dataset.mediaId) {
+    target = elements.results.querySelector(`.card-frame[data-media-id="${target.dataset.mediaId}"]`);
+  }
+  (target?.isConnected ? target : elements.resultsTitle).focus();
   detailReturnFocus = null;
 });
 
@@ -1513,4 +1865,12 @@ updateUrl();
 loadCollections().then(() => {
   if (!busy && !currentResults) runSearch();
 });
-if (user.name) loadUserList();
+// A stored sign-in wins over a typed username; if it no longer works, the
+// public list for the saved name loads instead.
+if (auth.session) {
+  startSession().then((signedIn) => {
+    if (!signedIn && user.name) loadUserList();
+  });
+} else if (user.name) {
+  loadUserList();
+}
