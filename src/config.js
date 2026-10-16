@@ -70,7 +70,7 @@ export const CACHE_STORAGE_PREFIX = "anime-finder:cache:";
 // Register clients at https://anilist.co/settings/developer.
 export const ANILIST_AUTHORIZE_URL = "https://anilist.co/api/v2/oauth/authorize";
 export const AUTH_CLIENTS = {
-  "https://mark-can.github.io/anime-finder/": "",
+  "https://mark-can.github.io/anime-finder/": "53988",
 };
 export const AUTH_STORAGE_KEY = "anime-finder:auth";
 // The page address (with its filters) to come back to after signing in.
