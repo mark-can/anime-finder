@@ -26,7 +26,8 @@ Live site: <https://mark-can.github.io/anime-finder/>
   - banner, synopsis and trailer;
   - AniList rankings, studio and next episode;
   - airing dates on a timeline of the selected year;
-  - official streaming links and links to AniList and MyAnimeList.
+  - official streaming links and links to AniList and MyAnimeList;
+  - similar cards: AniList users' recommendations for the title, with their rarity. A similar card from the current collection opens in place; any other opens on AniList.
 
 ### Filters
 
@@ -44,8 +45,14 @@ Filters apply as soon as they change; there is no "show" button.
 ### Your AniList list
 
 - Enter an AniList username to see the collection against your own list. The header shows how many cards you have collected, cards carry your list status and score, and "hide collected" removes finished titles.
-- Only public lists can be read, and no login or API key is needed.
+- Without signing in, only public lists can be read, and no API key is needed.
 - The username stays in this browser's `localStorage` and is never put in shared URLs.
+
+### Signing in to AniList
+
+- **Sign in with AniList** (in the filter panel) shows your list even if it is private, and puts a list control in every card: add a title to Planning in one click, or move it to Watching, Completed, Paused, Dropped or off the list. Changes are saved on AniList straight away.
+- Signing in uses AniList's implicit grant: AniList sends the browser back with a token in the URL fragment. The site takes it out of the address, restores the filters, and keeps the token in this browser's `localStorage` until it expires or you sign out. It is only sent to AniList, and only with requests about your own list. To revoke it completely, remove the app under AniList **Settings → Apps**.
+- The button only appears where an AniList client is registered for the page address (`AUTH_CLIENTS` in `src/config.js`), because AniList returns to one fixed redirect URL per client.
 
 ### Everything else
 
@@ -62,7 +69,8 @@ styles.css             Visual design, rarity frames and responsive layout
 site.webmanifest       Web app manifest
 assets/favicon.svg     Icon
 src/app.js             UI: rendering, events, filter panel, card dialog, auto-search
-src/anilist.js         AniList GraphQL client: batched search, details, genres and tags, user lists, rate limits
+src/anilist.js         AniList GraphQL client: batched search, details, recommendations, genres and tags, user lists and list edits, rate limits
+src/auth.js            Signing in to AniList: implicit-grant redirect, token storage and expiry
 src/cache.js           Expiring LRU cache mirrored to localStorage
 src/config.js          Constants, filter options and defaults
 src/domain.js          Pure logic: normalization, filtering, ranking, rarity, sections, timeline
@@ -98,6 +106,12 @@ This runs a syntax check on every source file and the unit tests. GitHub Actions
 
 GitHub Pages serves the `main` branch from the repository root (**Settings → Pages → Deploy from a branch → `main`, `/ (root)`**). Every commit to `main` updates the live site within a minute or two.
 
+## Set up signing in
+
+1. On <https://anilist.co/settings/developer>, create a client with the redirect URL `https://mark-can.github.io/anime-finder/` (exactly, with the trailing slash).
+2. Put its client ID in `AUTH_CLIENTS` in `src/config.js`. A client ID is public; no secret is involved.
+3. To try signing in on a local server, register a second client whose redirect URL is that local address (for example `http://localhost:4173/`) and add it to `AUTH_CLIENTS` as well.
+
 ## Branches
 
 - `main` is the live site.
@@ -115,4 +129,5 @@ GitHub Pages serves the `main` branch from the repository root (**Settings → P
 - **Local re-sorting.** The full list loads up front, so the sort order, list length, "first seasons only" and the AniList-list filter re-render it without another request. The exception is a list cut short by the safety limit: there, switching between score and number of ratings changes which titles AniList returns first.
 - **Sequels.** A title counts as a sequel when its prequel is a series or a film, or a work of its own format. Prequel OVAs and specials don't count, so a first season with a prequel OVA stays listed.
 - **Genres and tags.** They combine with AND, as on AniList. Their lists come from AniList (`GenreCollection`, `MediaTagCollection`) and are cached for a week. Adult genres and tags are never offered, and searches always exclude adult titles.
-- **Cache.** Responses are cached in `localStorage` (30 minutes for searches, 10 minutes for user lists), so a recent search or shared link opens without spending API requests.
+- **Cache.** Responses are cached in `localStorage` (30 minutes for searches, 10 minutes for public user lists, a day for recommendations), so a recent search or shared link opens without spending API requests. Requests made with a sign-in token are never cached.
+- **Recommendations** are fetched when a card is opened, one request per card.
